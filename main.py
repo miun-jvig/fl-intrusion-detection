@@ -1,7 +1,13 @@
 import tensorflow as tf
+import pandas as pd
 from preprocessing.preprocessing import preprocess_data, load_data
 from sklearn.model_selection import train_test_split
 from utils.utils import print_data_sizes
+from cl.model import create_model
+
+# variables
+EPOCHS = 3
+BATCH_SIZE = 64
 
 
 def main():
@@ -21,6 +27,13 @@ def main():
     print_data_sizes(x_train, y_train, x_val, y_val, x_test, y_test)
 
     # model
+    input_dim = x_train.shape[1]
+    num_classes = y_train.shape[1]
+    model = create_model(input_dim, num_classes)
+
+    # training
+    with tf.device('/gpu:0'):
+        history = model.fit(x_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(x_val, y_val))
 
 
 if __name__ == '__main__':

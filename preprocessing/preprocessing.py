@@ -10,7 +10,7 @@ def load_data(filename):
     labels = 'Attack_type'
     print(df[labels].value_counts())
 
-    x = df.drop(columns=[labels])  # Features: all columns except 'Attack_type'
+    x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
     y = to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
     return x, y
 
