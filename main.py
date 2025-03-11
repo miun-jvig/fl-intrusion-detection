@@ -3,7 +3,7 @@ from preprocessing.preprocessing import preprocess_data, load_data
 from sklearn.model_selection import train_test_split
 from utils.utils import print_data_sizes, save_history, one_hot_encode
 from utils.visualization import plot_hist, plot_conf_matrix
-from cl.model import create_model
+from model.model import create_model
 from sklearn.metrics import classification_report
 
 # variables
