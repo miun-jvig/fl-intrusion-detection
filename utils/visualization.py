@@ -47,8 +47,8 @@ def plot_conf_matrix(y_test, predicted_classes, filename):
     Plots a confusion matrix comparing predicted classes with the true labels.
 
     Args:
-        y_test (list or np.array): The true labels of the test data.
-        predicted_classes (list or np.array): The predicted classes of the test data.
+        y_test (list or np.array): The true labels of the test datasets.
+        predicted_classes (list or np.array): The predicted classes of the test datasets.
         filename (str): The path to save the resulting confusion matrix image.
     """
     labels_2 = ['Normal', 'Attack']

@@ -2,20 +2,13 @@ import pandas as pd
 from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder
 from keras.utils import to_categorical
+from config.config_loader import client_cfg
+from sklearn.model_selection import train_test_split
+
+num_clients = int(client_cfg['num_clients'])
 
 
-def load_data(filename):
-    df = pd.read_csv(filename, low_memory=False)
-    df.head(5)
-    labels = 'Attack_type'
-    print(df[labels].value_counts())
-
-    x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
-    y = to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
-    return x, y
-
-
-def preprocess_data(filename):
+def preprocess_data(filename, test_size=0.05):
     df = pd.read_csv(filename, low_memory=False)
     drop_columns = ["frame.time", "ip.src_host", "ip.dst_host", "arp.src.proto_ipv4", "arp.dst.proto_ipv4",
                     "http.file_data", "http.request.full_uri", "icmp.transmit_timestamp",
@@ -36,8 +29,28 @@ def preprocess_data(filename):
     for column in columns_to_encode:
         df = encode_text_dummy(df, column)
 
-    # save as new .csv-file
-    df.to_csv('preprocessed_DNN.csv', encoding='utf-8')
+    # Extract labels
+    y = df['Attack_type']
+    x = df.drop(columns=['Attack_type'])
+    y_onehot = to_categorical(LabelEncoder().fit_transform(y))
+
+    # global test set
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y_onehot, test_size=test_size, random_state=42, stratify=y
+    )
+
+    # Save global test set
+    global_test_df = pd.concat([pd.DataFrame(x_test), pd.DataFrame(y_test)], axis=1)
+    global_test_df.to_csv("..\\datasets\\global_test.csv", index=False)
+    print(f"Saved global test set with {len(global_test_df)} samples.")
+
+    # Distribute remaining datasets across clients
+    remaining_df = pd.concat([pd.DataFrame(x_train), pd.DataFrame(y_train)], axis=1)
+    df_splits = [remaining_df.iloc[i::num_clients] for i in range(num_clients)]
+
+    for i, df_split in enumerate(df_splits):
+        df_split.to_csv(f'..\\datasets\\preprocessed_{i}.csv', index=False, encoding='utf-8')
+        print(f"Saved preprocessed datasets for device {i}")
 
 
 def encode_text_dummy(df, name):
@@ -47,3 +60,6 @@ def encode_text_dummy(df, name):
         df[dummy_name] = dummies[x]
     df.drop(name, axis=1, inplace=True)
     return df
+
+
+preprocess_data('..\\datasets\\DNN-EdgeIIoT-dataset.csv')
