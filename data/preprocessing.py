@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
-num_clients = 2
+num_clients = 5
 
 
 def preprocess_data(filename, test_size=0.05):

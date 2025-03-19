@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from keras.utils import to_categorical
+from keras import utils
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -27,5 +27,5 @@ def load_data(file_path):
     labels = 'Attack_type'
 
     x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
-    y = to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
+    y = utils.to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
     return x, y

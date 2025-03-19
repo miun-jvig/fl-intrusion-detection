@@ -8,9 +8,7 @@ version = "1.0.0"
 description = "Federated AI with Embedded Devices using Flower"
 license = "Apache-2.0"
 dependencies = [
-    "flwr>=1.15.2",
-    "tensorflow==2.10.0",
-    "protobuf<=3.20",
+
 ]
 
 [tool.hatch.build]
@@ -36,6 +34,7 @@ num-server-rounds = 1
 fraction-evaluate = 0.5
 local-epochs = 2
 batch-size = 16
+fraction-fit = 1.0
 
 [tool.flwr.federations]
 default = "fl-iot"
