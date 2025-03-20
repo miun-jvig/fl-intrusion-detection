@@ -32,8 +32,8 @@ clientapp = "client_app:app"
 min-available-clients = 2
 num-server-rounds = 1
 fraction-evaluate = 0.5
-local-epochs = 2
-batch-size = 16
+local-epochs = 1
+batch-size = 128
 fraction-fit = 1.0
 
 [tool.flwr.federations]

@@ -21,7 +21,7 @@ class FlowerClient(NumPyClient):
             validation_data=(self.data['x_val'], self.data['y_val'])
         )
         evaluation_metrics = {'loss': history.history['loss'], 'accuracy': history.history['accuracy']}
-        return self.model.get_weights(), len(self.data['y_val']), evaluation_metrics
+        return self.model.get_weights(), len(self.data['y_train']), evaluation_metrics
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
