@@ -2,7 +2,15 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
-from utils.utils import one_hot_encode
+from utils import one_hot_encode
+from data.data_loader import load_data
+from sklearn.metrics import classification_report
+
+
+test_path = "C:/Users/joelv/PycharmProjects/thesis-ML-FL/datasets/global_test.csv"
+x_test, y_test = load_data(test_path)
+input_dim = x_test.shape[1]
+num_classes = y_test.shape[1]
 
 
 def create_plot(ax, x, y, y_label, x_label, title, labels, fontsize=12):
@@ -42,12 +50,12 @@ def plot_hist(history, filename):
     plt.savefig(filename)
 
 
-def plot_conf_matrix(y_test, predicted_classes, filename):
+def plot_conf_matrix(yt, predicted_classes, filename):
     """
     Plots a confusion matrix comparing predicted classes with the true labels.
 
     Args:
-        y_test (list or np.array): The true labels of the test datasets.
+        yt (list or np.array): The true labels of the test datasets.
         predicted_classes (list or np.array): The predicted classes of the test datasets.
         filename (str): The path to save the resulting confusion matrix image.
     """
@@ -55,7 +63,7 @@ def plot_conf_matrix(y_test, predicted_classes, filename):
     labels_6 = ['DDoS', 'Injection', 'MITM', 'Malware', 'Normal', 'Scanning']
     labels_15 = ['Back', 'HTTP', 'ICMP', 'TCP', 'UDP', 'Fing', 'MITM', 'Normal', 'Pwd', 'Port', 'Rans', 'SQL',
                  'Upload', 'Scan', 'XSS']
-    predicted_classes, y_test_labels = one_hot_encode(y_test, predicted_classes)
+    predicted_classes, y_test_labels = one_hot_encode(yt, predicted_classes)
     cm = confusion_matrix(y_test_labels, predicted_classes)
     cm_normalized = cm / cm.sum(axis=1, keepdims=True)
 
@@ -65,3 +73,11 @@ def plot_conf_matrix(y_test, predicted_classes, filename):
     plt.ylabel('True')
     plt.title('Confusion Matrix')
     plt.savefig(filename)
+
+
+model = tf.keras.models.load_model('../checkpoints/global_model_1.keras')
+test_predictions = model.predict(x_test)
+plot_conf_matrix(y_test, test_predictions, '../results/conf.png')
+predicted, y_lab = one_hot_encode(y_test, test_predictions)
+report = classification_report(y_lab, predicted)
+print("\nClassification Report:\n", report)

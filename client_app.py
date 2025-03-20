@@ -2,11 +2,13 @@ from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 from model.model import create_model
 from data.data_loader import load_dataset
+from utils.utils import save_history
 
 
 class FlowerClient(NumPyClient):
-    def __init__(self, model, data, local_epochs, batch_size):
+    def __init__(self, model, partition_id, data, local_epochs, batch_size):
         self.model = model
+        self.partition_id = partition_id
         self.data = data
         self.local_epochs = local_epochs
         self.batch_size = batch_size
@@ -20,8 +22,8 @@ class FlowerClient(NumPyClient):
             batch_size=self.batch_size,
             validation_data=(self.data['x_val'], self.data['y_val'])
         )
-        evaluation_metrics = {'loss': history.history['loss'], 'accuracy': history.history['accuracy']}
-        return self.model.get_weights(), len(self.data['y_train']), evaluation_metrics
+        save_history(history, config['server_round'], f'logs/history-{self.partition_id}.csv')
+        return self.model.get_weights(), len(self.data['x_train']), {}
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
@@ -31,7 +33,7 @@ class FlowerClient(NumPyClient):
 
 def client_fn(context: Context):
     """Construct a Client that will be run in a ClientApp."""
-
+    partition_id = context.node_config["partition-id"]
     # Read the node_config to know where dataset is located
     dataset_path = context.node_config["dataset-path"]
     data = load_dataset(dataset_path)
@@ -43,7 +45,7 @@ def client_fn(context: Context):
     batch_size = context.run_config["batch-size"]
     local_epochs = context.run_config["local-epochs"]
 
-    return FlowerClient(model, data, local_epochs, batch_size).to_client()
+    return FlowerClient(model, partition_id, data, local_epochs, batch_size).to_client()
 
 
 app = ClientApp(client_fn)
