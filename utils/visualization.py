@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import seaborn as sns
+import pandas as pd
 from sklearn.metrics import confusion_matrix
 from utils import one_hot_encode
 from data.data_loader import load_data
@@ -24,6 +25,35 @@ def create_plot(ax, x, y, y_label, x_label, title, labels, fontsize=12):
     ax.set_xticks(x_ticks)
 
 
+def plot_fl_rounds(data_file, save_filename):
+    df = pd.read_csv(data_file)
+
+    # Extract data
+    rounds = df['round_number']
+    accuracy = df['accuracy']
+    loss = df['loss']
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))
+
+    # Accuracy plot
+    ax1.plot(rounds, accuracy, 'b-', label='Accuracy')
+    ax1.set_ylabel('Accuracy Rate')
+    ax1.set_xlabel('Federated Round')
+    ax1.set_title('Accuracy per Federated Round')
+    ax1.legend(loc='best')
+
+    # Loss plot
+    ax2.plot(rounds, loss, 'r-', label='Loss')
+    ax2.set_ylabel('Loss')
+    ax2.set_xlabel('Federated Round')
+    ax2.set_title('Learning Curve per Federated Round')
+    ax2.legend(loc='best')
+
+    # Adjust layout and save figure
+    fig.tight_layout()
+    plt.savefig(save_filename)
+    plt.show()
+
+
 def plot_hist(history, filename):
     """
     Plots training and validation accuracy and loss histories as two separate histograms.
@@ -33,9 +63,6 @@ def plot_hist(history, filename):
                                                       'accuracy', 'val_accuracy', 'loss', and 'val_loss'.
         filename (str): The path to save the resulting plot image.
     """
-    if isinstance(history, tf.keras.callbacks.History):
-        history = history.history
-
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))
     # first plot
     create_plot(ax1, history['accuracy'], history['val_accuracy'], 'Accuracy Rate', 'Epoch',
@@ -75,9 +102,10 @@ def plot_conf_matrix(yt, predicted_classes, filename):
     plt.savefig(filename)
 
 
-model = tf.keras.models.load_model('../checkpoints/global_model_1.keras')
+model = tf.keras.models.load_model('../checkpoints/global_model_5.keras')
 test_predictions = model.predict(x_test)
 plot_conf_matrix(y_test, test_predictions, '../results/conf.png')
+plot_fl_rounds('../logs/evaluation_history.csv', '../results/fl_rounds.png')
 predicted, y_lab = one_hot_encode(y_test, test_predictions)
 report = classification_report(y_lab, predicted)
 print("\nClassification Report:\n", report)

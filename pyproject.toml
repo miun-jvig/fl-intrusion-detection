@@ -30,14 +30,18 @@ clientapp = "client_app:app"
 
 [tool.flwr.app.config]
 min-available-clients = 2
-num-server-rounds = 15
-fraction-evaluate = 0.5
+num-server-rounds = 25
+fraction-evaluate = 1.0
 local-epochs = 5
 batch-size = 128
 fraction-fit = 1.0
+use-wandb = false
 
 [tool.flwr.federations]
 default = "fl-iot"
+
+[tool.flwr.federations.fl-iot-local]
+options.num-supernodes = 2
 
 [tool.flwr.federations.fl-iot]
 address = "127.0.0.1:9093"

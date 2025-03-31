@@ -1,30 +1,28 @@
 import flwr as fl
-import csv
 from flwr.common import Metrics, ndarrays_to_parameters, NDArrays, Scalar
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 from typing import List, Tuple, Dict, Optional
-from flwr.server.strategy import FedAvg
+from strategy.strategy import CustomFedAvg
 from model.model import create_model
 from data.data_loader import load_data
 
-
-# data
-test_path = "/home/joelv/fl-iot/datasets/global_test.csv"
-x_test, y_test = load_data(test_path)
-input_dim = x_test.shape[1]
-num_classes = y_test.shape[1]
-
 # model
-global_model = create_model(input_dim, num_classes)
-history_file = "logs/evaluation_history.csv"
-history = []
+global_model = create_model()
 
 
-def fit_config(server_round: int):
-    config = {
-        "server_round": server_round,  # The current round of federated learning
-    }
-    return config
+def get_evaluate_fn():
+    test_path = '/home/joelv/fl-iot/datasets/global_test.csv'
+    x_test, y_test = load_data(test_path)
+
+    # The `evaluate` function will be called by Flower after every round
+    def evaluate(server_round: int, parameters: NDArrays, config: Dict[str, Scalar], ) \
+            -> Optional[Tuple[float, Dict[str, Scalar]]]:
+        global_model.set_weights(parameters)
+        loss, accuracy = global_model.evaluate(x_test, y_test)
+        print(f"Server-side evaluation loss {loss} / accuracy {accuracy}")
+        return loss, {"centralized_accuracy": accuracy}
+
+    return evaluate
 
 
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
@@ -36,26 +34,6 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     return {"accuracy": sum(accuracies) / sum(examples)}
 
 
-# The `evaluate` function will be called by Flower after every round
-def evaluate(server_round: int, parameters: NDArrays, config: Dict[str, Scalar],)\
-        -> Optional[Tuple[float, Dict[str, Scalar]]]:
-    global_model.set_weights(parameters)
-    loss, accuracy = global_model.evaluate(x_test, y_test)
-    global_model.save(f"checkpoints/global_model_{server_round}.keras")
-    print(f"Server-side evaluation loss {loss} / accuracy {accuracy}")
-
-    # Save history to file every round
-    if server_round != 0:
-        history.append((server_round, accuracy, loss))
-        with open(history_file, mode='w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["round_number", "accuracy", "loss"])
-            writer.writerows(history)
-
-    print(f"Server-side evaluation loss {loss} / accuracy {accuracy}")
-    return loss, {"accuracy": accuracy}
-
-
 def server_fn(context: fl.common.Context):
     """Construct components that set the ServerApp behaviour."""
 
@@ -64,14 +42,15 @@ def server_fn(context: fl.common.Context):
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Define the strategy
-    strategy = FedAvg(
+    strategy = CustomFedAvg(
+        run_config=context.run_config,
         fraction_fit=context.run_config["fraction-fit"],
+        use_wandb=context.run_config["use-wandb"],
         fraction_evaluate=context.run_config["fraction-evaluate"],
         min_available_clients=context.run_config["min-available-clients"],
         evaluate_metrics_aggregation_fn=weighted_average,
-        evaluate_fn=evaluate,
+        evaluate_fn=get_evaluate_fn(),
         initial_parameters=parameters,
-        on_fit_config_fn=fit_config,
     )
     config = ServerConfig(num_rounds=context.run_config["num-server-rounds"])
 

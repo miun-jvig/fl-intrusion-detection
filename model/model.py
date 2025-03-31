@@ -5,8 +5,10 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
-def create_model(input_dim, num_classes):
+def create_model():
     lambda_val = 1e-4
+    input_dim = 96
+    num_classes = 15
     lr_schedule = ExponentialDecay(initial_learning_rate=0.001, decay_steps=5000, decay_rate=0.9)
     optimizer = Adam(learning_rate=lr_schedule)
 
