@@ -25,8 +25,8 @@ packages = ["."]
 publisher = "miun-jvig"
 
 [tool.flwr.app.components]
-serverapp = "server_app:app"
-clientapp = "client_app:app"
+serverapp = "apps.server_app:app"
+clientapp = "apps.client_app:app"
 
 [tool.flwr.app.config]
 min-available-clients = 2
@@ -35,7 +35,7 @@ fraction-evaluate = 1.0
 local-epochs = 5
 batch-size = 128
 fraction-fit = 1.0
-use-wandb = false
+use-wandb = true
 
 [tool.flwr.federations]
 default = "fl-iot"

@@ -3,11 +3,8 @@ from flwr.common import Metrics, ndarrays_to_parameters, NDArrays, Scalar
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 from typing import List, Tuple, Dict, Optional
 from strategy.strategy import CustomFedAvg
-from model.model import create_model
+from model.model import load_model
 from data.data_loader import load_data
-
-# model
-global_model = create_model()
 
 
 def get_evaluate_fn():
@@ -17,9 +14,9 @@ def get_evaluate_fn():
     # The `evaluate` function will be called by Flower after every round
     def evaluate(server_round: int, parameters: NDArrays, config: Dict[str, Scalar], ) \
             -> Optional[Tuple[float, Dict[str, Scalar]]]:
-        global_model.set_weights(parameters)
-        loss, accuracy = global_model.evaluate(x_test, y_test)
-        print(f"Server-side evaluation loss {loss} / accuracy {accuracy}")
+        model = load_model()
+        model.set_weights(parameters)
+        loss, accuracy = model.evaluate(x_test, y_test)
         return loss, {"centralized_accuracy": accuracy}
 
     return evaluate
@@ -38,7 +35,7 @@ def server_fn(context: fl.common.Context):
     """Construct components that set the ServerApp behaviour."""
 
     # Initialize model parameters
-    ndarrays = global_model.get_weights()
+    ndarrays = load_model().get_weights()
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Define the strategy

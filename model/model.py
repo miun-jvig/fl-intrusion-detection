@@ -5,7 +5,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
-def create_model():
+def load_model():
     lambda_val = 1e-4
     input_dim = 96
     num_classes = 15

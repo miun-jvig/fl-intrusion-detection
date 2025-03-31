@@ -5,7 +5,6 @@ from sklearn.preprocessing import LabelEncoder
 
 
 def load_dataset(file_path):
-    data = {}
     x_data, y_data = load_data(file_path)
     # 90 % train, 5 % test, 5 % val
     x_train, x_temp, y_train, y_temp = train_test_split(x_data, y_data, test_size=0.1, random_state=42,
@@ -13,12 +12,7 @@ def load_dataset(file_path):
     x_val, x_test, y_val, y_test = train_test_split(x_temp, y_temp, test_size=0.5, random_state=42,
                                                     stratify=y_temp)
 
-    # store in dictionary, i.e. datasets['x_train'], datasets['y_train'], etc
-    for name, x, y in zip(['train', 'val', 'test'], [x_train, x_val, x_test], [y_train, y_val, y_test]):
-        data[f'x_{name}'] = x
-        data[f'y_{name}'] = y
-
-    return data
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
 
 def load_data(file_path):

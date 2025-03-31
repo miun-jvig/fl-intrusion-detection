@@ -2,7 +2,7 @@ import json
 from logging import INFO
 import wandb
 from utils.utils import create_run_dir
-from model.model import create_model
+from model.model import load_model
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
@@ -18,7 +18,6 @@ class CustomFedAvg(FedAvg):
     checkpoint of the global  model when a new best is found, (3) logs
     results to W&B if enabled.
     """
-
     def __init__(self, run_config: UserConfig, use_wandb: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -28,9 +27,6 @@ class CustomFedAvg(FedAvg):
         # Initialise W&B if set
         if use_wandb:
             self._init_wandb_project()
-
-        # Keep track of best acc
-        self.best_acc_so_far = 0.0
 
         # A dictionary to store results as they come
         self.results = {}
@@ -54,27 +50,16 @@ class CustomFedAvg(FedAvg):
         with open(f"{self.save_path}/results.json", "w", encoding="utf-8") as fp:
             json.dump(self.results, fp)
 
-    def _update_best_acc(self, round, accuracy, parameters):
-        """Determines if a new best global model has been found.
-
-        If so, the model checkpoint is saved to disk.
-        """
-        if accuracy > self.best_acc_so_far:
-            self.best_acc_so_far = accuracy
-            logger.log(INFO, "💡 New best global model found: %f", accuracy)
-            # You could save the parameters object directly.
-            # Instead we are going to apply them to a PyTorch
-            # model and save the state dict.
-            # Converts flwr.common.Parameters to ndarrays
-            ndarrays = parameters_to_ndarrays(parameters)
-            model = create_model()
-            model.set_weights(ndarrays)
-            # Save the PyTorch model
-            file_name = (
+    def _store_model(self, round, accuracy, parameters):
+        logger.log(INFO, "💡 New model saved with accuracy: %f", accuracy)
+        model = load_model()
+        ndarrays = parameters_to_ndarrays(parameters)
+        model.set_weights(ndarrays)
+        file_name = (
                 self.save_path
-                / f"model_state_acc_{accuracy:.3f}_round_{round}.weights.h5"
-            )
-            model.save_weights(file_name)
+                / f"model_state_acc_{accuracy:.3f}_round_{round}.keras"
+        )
+        model.save(file_name)
 
     def store_results_and_log(self, server_round: int, tag: str, results_dict):
         """A helper method that stores results and logs them to W&B if enabled."""
@@ -93,7 +78,7 @@ class CustomFedAvg(FedAvg):
         loss, metrics = super().evaluate(server_round, parameters)
 
         # Save model if new best central accuracy is found
-        self._update_best_acc(server_round, metrics["centralized_accuracy"], parameters)
+        self._store_model(server_round, metrics["centralized_accuracy"], parameters)
 
         # Store and log
         self.store_results_and_log(
