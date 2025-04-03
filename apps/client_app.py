@@ -1,7 +1,7 @@
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
-from model.model import load_model
-from data.data_loader import load_dataset
+from apps.task import load_model
+from data_loading.data_loader import load_dataset
 
 
 class FlowerClient(NumPyClient):
@@ -14,26 +14,33 @@ class FlowerClient(NumPyClient):
 
     def fit(self, parameters, config):
         self.model.set_weights(parameters)
-        self.model.fit(
+        history = self.model.fit(
             self.x_train,
             self.y_train,
             epochs=self.local_epochs,
             batch_size=self.batch_size,
             validation_data=(self.x_val, self.y_val)
         )
-        return self.model.get_weights(), len(self.x_train), {}
+        results = {
+            "loss": history.history["loss"][0],
+            "accuracy": history.history["accuracy"][0],
+            "val_loss": history.history["val_loss"][0],
+            "val_accuracy": history.history["val_accuracy"][0],
+        }
+        return self.model.get_weights(), len(self.x_train), results
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
         loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
-        return loss, len(self.y_test), {'accuracy': float(accuracy)}
+        return loss, len(self.x_test), {'accuracy': float(accuracy)}
 
 
 def client_fn(context: Context):
     """Construct a Client that will be run in a ClientApp."""
     partition_id = context.node_config["partition-id"]
     # Read the node_config to know where dataset is located
-    dataset_path = context.node_config["dataset-path"]
+    # dataset_path = context.node_config["dataset-path"]
+    dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
     data = load_dataset(dataset_path)
     model = load_model()
 
