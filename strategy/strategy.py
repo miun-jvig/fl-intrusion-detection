@@ -118,7 +118,7 @@ class CustomFedAvg(FedAvg):
             server_round=server_round,
             tag="centralized_evaluate",
             metric_type="evaluation",
-            results_dict={"centralized_loss": loss, **metrics},
+            results_dict={"centralized_evaluate_loss": loss, **metrics},
         )
         return loss, metrics
 

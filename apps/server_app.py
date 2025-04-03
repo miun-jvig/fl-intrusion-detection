@@ -14,7 +14,7 @@ def get_evaluate_fn(x_test, y_test):
         model = load_model()
         model.set_weights(parameters_ndarrays)
         loss, accuracy = model.evaluate(x_test, y_test)
-        return loss, {"centralized_accuracy": accuracy}
+        return loss, {"centralized_evaluate_accuracy": accuracy}
 
     return evaluate
 
@@ -22,11 +22,11 @@ def get_evaluate_fn(x_test, y_test):
 def fit_metrics_fn(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     # Aggregate client metrics and extract accuracy and val_accuracy
     aggregated_metrics = {
-        "accuracy": sum(m["accuracy"] * num_examples for num_examples, m in metrics) / sum(
+        "training_accuracy": sum(m["accuracy"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
         "val_accuracy": sum(m["val_accuracy"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
-        "loss": sum(m["loss"] * num_examples for num_examples, m in metrics) / sum(
+        "training_loss": sum(m["loss"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
         "val_loss": sum(m["val_loss"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
@@ -49,8 +49,8 @@ def server_fn(context: fl.common.Context):
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
-    # test_path = '/home/joelv/fl-iot/datasets/global_test.csv'
-    test_path = r'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\global_test.csv'
+    test_path = '/home/joelv/fl-iot/datasets/global_test.csv'
+    # test_path = r'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\global_test.csv'
     x_test, y_test = load_data(test_path)
 
     # Define the strategy

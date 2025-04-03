@@ -7,10 +7,10 @@ from apps.task import one_hot_encode
 from data_loading.data_loader import load_data
 from sklearn.metrics import classification_report
 
-home_path = 'C:/Users/joelv/PycharmProjects/thesis-ML-FL'
-test_path = home_path + '/datasets/global_test.csv'
-current_output = '/outputs/2025-04-03/14-45-23'
-best_model = '/model_state_acc_0.927_round_10.keras'
+home_path = 'C:/Users/joelv/PycharmProjects/thesis-ML-FL/'
+test_path = home_path + 'datasets/global_test.csv'
+current_output = 'outputs/2025-04-03/15-25-12/'
+best_model = 'model_state_acc_0.963_round_18.keras'
 
 
 def create_plot(ax, x, y, y_label, x_label, title, labels, fontsize=12):
@@ -38,11 +38,11 @@ def plot_eval_data(data_file, save_filename):
 
     # First plot: Accuracy
     create_plot(ax1, centralized_accuracy, federated_accuracy, 'Accuracy', 'Round',
-                'Aggregated Accuracy', ['Training Accuracy', 'Validation Accuracy'])
+                'Aggregated Accuracy', ['Centralized Accuracy', 'Federated Accuracy'])
 
     # Second plot: Validation accuracy
     create_plot(ax2, centralized_loss, federated_loss, 'Loss', 'Round', 'Aggregated Loss',
-                ['Loss', 'Validation loss'])
+                ['Centralized Loss', 'Federated Loss'])
 
     # Save figure
     fig.tight_layout()
@@ -103,8 +103,8 @@ x_test, y_test = load_data(test_path)
 model = tf.keras.models.load_model(home_path + current_output + best_model)
 test_predictions = model.predict(x_test)
 plot_conf_matrix(y_test, test_predictions, 'conf.png')
-plot_eval_data(home_path + current_output + '/evaluation_results.json', 'evaluation_plot.png')
-plot_fit_results(home_path + current_output + '/fit_results.json', 'fit_plot.png')
+plot_eval_data(home_path + current_output + 'evaluation_results.json', 'evaluation_plot.png')
+plot_fit_results(home_path + current_output + 'fit_results.json', 'fit_plot.png')
 predicted, y_lab = one_hot_encode(y_test, test_predictions)
 report = classification_report(y_lab, predicted)
 with open("classification_report.txt", "w") as f:
