@@ -16,14 +16,20 @@ The code can be run using either embedded devices (I used five Raspberry Pi 3 wi
 Download the Edge-IIoTset and extract the contents into "/datasets". Open preprocessing.py and run the code to get a stratified split of the set (change num_clients to how many clients you want). Copy the preprocessed dataset (output from preprocessing.py) to your Raspberry Pi in a location of your choice.
 
 ## 2. Execution and logging
-To simulate, change options.num-supernodes in pyproject.toml to num_client and open a terminal to start the simulation with the command "flwr run . fl-iot-local".
+**To simulate**
 
-To run using embedded devices such as Raspberry Pi, you first need to set it up by following https://github.com/adap/flower/blob/main/examples/embedded-devices/device_setup.md, as well as installing pandas and scikit-learn.
+1. Change options.num-supernodes in pyproject.toml to how many clients you want 
+2. Update the variable "dataset_path" to '/datasets/preprocessed_{partition_id}.csv' in client_fn()
+3. Open a terminal to start the simulation with the command "flwr run . fl-iot-local"
+
+**To run on embedded devices**
+
+To run using embedded devices such as Raspberry Pi, you first need to set it up by following https://github.com/adap/flower/blob/main/examples/embedded-devices/device_setup.md, as well as installing pandas and scikit-learn on the devices.
 
 After that:
 
 1. Start a flower superlink on your server with the command _flower-superlink --insecure_
-3. Start your supernodes on your embedded devices with the command _flower-supernode --insecure --superlink="YOUR_IP:9092" --node-config="dataset-path='YOUR_DATA_LOCATION/preprocessed_i.csv', partition-id='i'"_
+3. Start your supernodes on your embedded devices with the command _flower-supernode --insecure --superlink="SERVER_IP:9092" --node-config="dataset-path='LOCAL_DEVICE_DATA_LOCATION/preprocessed_i.csv', partition-id='i'"_
 4. Start the FL process with the command _flwr run . fl-iot --stream_
 
 Logs will now be created and put into .../outputs/DATE/TIMESTAMP/ and will contain:
