@@ -111,7 +111,7 @@ class CustomFedAvg(FedAvg):
         loss, metrics = super().evaluate(server_round, parameters)
 
         # Save model if new best central accuracy is found
-        self._update_best_acc(server_round, metrics["centralized_accuracy"], parameters)
+        self._update_best_acc(server_round, metrics["centralized_evaluate_accuracy"], parameters)
 
         # Store and log
         self.store_results_and_log(

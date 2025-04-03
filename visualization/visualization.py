@@ -9,8 +9,8 @@ from sklearn.metrics import classification_report
 
 home_path = 'C:/Users/joelv/PycharmProjects/thesis-ML-FL/'
 test_path = home_path + 'datasets/global_test.csv'
-current_output = 'outputs/2025-04-03/15-25-12/'
-best_model = 'model_state_acc_0.963_round_18.keras'
+current_output = 'outputs/2025-04-03/18-20-43/'
+best_model = 'model_state_acc_0.959_round_17.keras'
 
 
 def create_plot(ax, x, y, y_label, x_label, title, labels, fontsize=12):
@@ -28,9 +28,9 @@ def plot_eval_data(data_file, save_filename):
     with open(data_file, 'r') as file:
         data = json.load(file)
     # Extract data
-    centralized_accuracy = [entry["centralized_accuracy"] for entry in data["centralized_evaluate"]]
+    centralized_accuracy = [entry["centralized_evaluate_accuracy"] for entry in data["centralized_evaluate"]]
     federated_accuracy = [entry["federated_evaluate_accuracy"] for entry in data["federated_evaluate"]]
-    centralized_loss = [entry["centralized_loss"] for entry in data["centralized_evaluate"]]
+    centralized_loss = [entry["centralized_evaluate_loss"] for entry in data["centralized_evaluate"]]
     federated_loss = [entry["federated_evaluate_loss"] for entry in data["federated_evaluate"]]
 
     # Plotting
@@ -53,9 +53,9 @@ def plot_fit_results(data_file, save_filename):
     with open(data_file, 'r') as file:
         data = json.load(file)
     # Extract data
-    accuracy = [entry['accuracy'] for entry in data['fit_metrics']]
+    accuracy = [entry['training_accuracy'] for entry in data['fit_metrics']]
     val_accuracy = [entry['val_accuracy'] for entry in data['fit_metrics']]
-    loss = [entry['loss'] for entry in data['fit_metrics']]
+    loss = [entry['training_loss'] for entry in data['fit_metrics']]
     val_loss = [entry['val_loss'] for entry in data['fit_metrics']]
 
     # Plotting
@@ -107,5 +107,6 @@ plot_eval_data(home_path + current_output + 'evaluation_results.json', 'evaluati
 plot_fit_results(home_path + current_output + 'fit_results.json', 'fit_plot.png')
 predicted, y_lab = one_hot_encode(y_test, test_predictions)
 report = classification_report(y_lab, predicted)
+print(report)
 with open("classification_report.txt", "w") as f:
     f.write(report)
