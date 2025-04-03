@@ -6,7 +6,7 @@ The aim of this project is to explore federated learning for intrusion detection
 # Requisites
 The code can be run using either embedded devices (I used five Raspberry Pi 3 with 16GB SD-card) or through simulation (see instructions).
 
-* A Linux-based server is required when running on embedded devices due to dependency compatibility and network constraints
+* A Linux-based server is required when running on embedded devices (I used Ubuntu WSL)
 * Python 3.10+
 * Edge-IIoTset Dataset in /datasets
 
@@ -18,16 +18,18 @@ Download the Edge-IIoTset and extract the contents into "/datasets". Open prepro
 ## 2. Execution and logging
 To simulate, change options.num-supernodes in pyproject.toml to num_client and open a terminal to start the simulation with the command "flwr run . fl-iot-local".
 
-To run using the embedded devices:
+To run using embedded devices such as Raspberry Pi, you first need to set it up by following https://github.com/adap/flower/blob/main/examples/embedded-devices/device_setup.md, as well as installing pandas and scikit-learn.
+
+After that:
 
 1. Start a flower superlink on your server with the command _flower-superlink --insecure_
-2. Start your supernodes on your embedded devices with the command _flower-supernode --insecure --superlink="YOUR_IP:9092" --node-config="dataset-path='YOUR_DATA_LOCATION/preprocessed_i.csv', partition-id='i'"_
-3. Start the FL process with the command _flwr run . fl-iot --stream_
+3. Start your supernodes on your embedded devices with the command _flower-supernode --insecure --superlink="YOUR_IP:9092" --node-config="dataset-path='YOUR_DATA_LOCATION/preprocessed_i.csv', partition-id='i'"_
+4. Start the FL process with the command _flwr run . fl-iot --stream_
 
-Logs will now be created and put into .../outputs/DATE/TIMESTAMP and will contain:
+Logs will now be created and put into .../outputs/DATE/TIMESTAMP/ and will contain:
 
-* fit_results.json: training and validation accuracy
-* evaluation_results.json: federated and centralized evaluation accuracy
+* fit_results.json: aggregated training and validation accuracy
+* evaluation_results.json: aggregated federated and centralized evaluation accuracy
 * The saved .keras models that achieved the best accuracy during your run
 
 Additionally, wandb is also logging these results.
