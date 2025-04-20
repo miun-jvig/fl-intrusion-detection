@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 
 
 def load_dataset(file_path):
-    x_data, y_data = load_data(file_path)
+    _, x_data, y_data = load_data(file_path)
     # 90 % train, 5 % test, 5 % val
     x_train, x_temp, y_train, y_temp = train_test_split(x_data, y_data, test_size=0.1, random_state=42,
                                                         stratify=y_data)
@@ -22,4 +22,4 @@ def load_data(file_path):
 
     x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
     y = utils.to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
-    return x, y
+    return df, x, y

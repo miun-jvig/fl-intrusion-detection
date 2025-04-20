@@ -49,9 +49,9 @@ def server_fn(context: fl.common.Context):
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
-    test_path = '/home/joelv/fl-iot/datasets/global_test.csv'
-    # test_path = r'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\global_test.csv'
-    x_test, y_test = load_data(test_path)
+    # test_path = '/home/joelv/fl-intrusion-detection/datasets/global_test.csv'
+    test_path = r'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\global_test.csv'
+    _, x_test, y_test = load_data(test_path)
 
     # Define the strategy
     strategy = CustomFedAvg(

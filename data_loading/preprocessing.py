@@ -30,14 +30,14 @@ def preprocess_data(filename, test_size=0.05):
     remaining_df, global_test_df = train_test_split(
         df, test_size=test_size, random_state=42, stratify=df['Attack_type']
     )
-    global_test_df.to_csv("../datasets/global_test.csv")
+    # global_test_df.to_csv("../datasets/global_test.csv")
     print(f"Saved global test set with {len(global_test_df)} samples.")
 
     # Distribute remaining datasets across clients
     df_splits = [remaining_df.iloc[i::num_clients] for i in range(num_clients)]
 
     for i, df_split in enumerate(df_splits):
-        df_split.to_csv(f'../datasets/preprocessed_{i}.csv', encoding='utf-8')
+        # df_split.to_csv(f'../datasets/preprocessed_{i}.csv', encoding='utf-8')
         print(f"Saved preprocessed datasets for device {i}")
 
 
