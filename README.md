@@ -24,13 +24,13 @@ Download the Edge-IIoTset and extract the contents into "/datasets". Open prepro
 
 **To run on embedded devices**
 
-To run using embedded devices such as Raspberry Pi, you first need to set it up by following https://github.com/adap/flower/blob/main/examples/embedded-devices/device_setup.md, as well as installing pandas and scikit-learn on the devices.
+To run using embedded devices such as Raspberry Pi, you first need to set it up by following https://github.com/adap/flower/blob/main/examples/embedded-devices/device_setup.md. Then install TensorFlow==2.18.0, flwr, scikit-learn and pandas on the devices.
 
 After that:
 
 1. Start a flower superlink on your server with the command `flower-superlink --insecure`
 3. Start your supernodes on your embedded devices with the command `flower-supernode --insecure --superlink="SERVER_IP:9092" --node-config="dataset-path='LOCAL_DEVICE_DATA_LOCATION/preprocessed_i.csv', partition-id='i'"`
-4. Start the FL process with the command `flwr run . fl-iot --stream`
+4. Start the FL process on the server with the command `flwr run . fl-iot --stream`
 
 Logs will be created in .../outputs/DATE/TIMESTAMP/ and will contain:
 
