@@ -5,7 +5,7 @@ from apps.task import load_model, create_run_dir
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
-
+from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
 
 PROJECT_NAME = "fl-iot"
 
@@ -17,11 +17,14 @@ class CustomFedAvg(FedAvg):
     checkpoint of the global  model when a new best is found, (3) logs
     results to W&B if enabled.
     """
+
     def __init__(self, run_config: UserConfig, use_wandb: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Create a directory where to save results from this run
         self.save_path, self.run_dir = create_run_dir(run_config)
+        self.total_rounds = run_config["num-server-rounds"]
+        self.use_dp = run_config["use-dp"]
         self.use_wandb = use_wandb
         # Initialise W&B if set
         if use_wandb:
@@ -33,6 +36,7 @@ class CustomFedAvg(FedAvg):
         # A dictionary to store results as they come
         self.eval_results = {}
         self.fit_results = {}
+        self.dp_results = {}
 
     def _init_wandb_project(self):
         # init W&B
@@ -43,7 +47,8 @@ class CustomFedAvg(FedAvg):
         # Update results dict
         metric_mapping = {
             'evaluation': (self.eval_results, f"{self.save_path}/evaluation_results.json"),
-            'fit': (self.fit_results, f"{self.save_path}/fit_results.json")
+            'fit': (self.fit_results, f"{self.save_path}/fit_results.json"),
+            'dp': (self.dp_results, f"{self.save_path}/dp_results.json")
         }
         results_dict_to_store, file_path = metric_mapping.get(metric_type, (None, None))
 
@@ -81,6 +86,24 @@ class CustomFedAvg(FedAvg):
             )
             model.save(file_name)
 
+    def _compute_and_store_privacy(self, num_examples: int, batch_size: int, local_epochs: int, noise_multiplier: float,
+                                   delta: float, round_num: int):
+        """Compute (ε,δ) for on the final round and log it to W&B / store_results."""
+        if round_num == self.total_rounds and self.use_dp:
+            dp_report = compute_dp_sgd_privacy_statement(
+                number_of_examples=num_examples,
+                batch_size=batch_size,
+                num_epochs=local_epochs,
+                noise_multiplier=noise_multiplier,
+                delta=delta,
+            )
+
+            self._store_results(
+                tag="dp_metrics",
+                metric_type="dp",
+                results_dict={"Report": dp_report},
+            )
+
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):
         """A helper method that stores results and logs them to W&B if enabled."""
         # Store results
@@ -97,12 +120,22 @@ class CustomFedAvg(FedAvg):
     def aggregate_fit(self, server_round, results, failures):
         loss, metrics = super().aggregate_fit(server_round, results, failures)
 
-        # Store and log
+        self._compute_and_store_privacy(metrics["num_examples"], metrics["batch_size"], metrics["local_epochs"],
+                                        metrics["noise_multiplier"], metrics["delta"], server_round)
+
+        fit_metrics = {
+            "training_loss": metrics["training_loss"],
+            "training_accuracy": metrics["training_accuracy"],
+            "val_loss": metrics["val_loss"],
+            "val_accuracy": metrics["val_accuracy"],
+        }
+
+        # Store and log fit metrics
         self.store_results_and_log(
             server_round=server_round,
             tag="fit_metrics",
             metric_type="fit",
-            results_dict={**metrics},
+            results_dict=fit_metrics,
         )
         return loss, metrics
 

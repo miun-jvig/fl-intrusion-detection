@@ -9,30 +9,41 @@ from keras import layers
 from keras import regularizers
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
+from tensorflow_privacy.privacy.keras_models.dp_keras_model import DPSequential
 
 # Make TensorFlow log less verbose
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
-def load_model():
-    lambda_val = 1e-4
-    input_dim = 97
-    num_classes = 15
-    lr_schedule = ExponentialDecay(initial_learning_rate=0.001, decay_steps=5000, decay_rate=0.9)
+def _get_compilation():
+    lr_schedule = ExponentialDecay(0.001, decay_steps=5000, decay_rate=0.9)
     optimizer = Adam(learning_rate=lr_schedule)
+    compile_args = dict(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    return compile_args
 
-    model = Sequential([
-        Input(shape=(input_dim,)),
-        layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(lambda_val)),
-        layers.BatchNormalization(),
-        layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(lambda_val)),
-        layers.BatchNormalization(),
-        layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(lambda_val)),
-        layers.Dropout(0.3),
-        layers.Dense(num_classes, activation='softmax')
-    ])
 
-    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+def _add_common_layers(model):
+    model.add(Input(shape=(97,)))
+    model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
+    model.add(layers.Dropout(0.3))
+    model.add(layers.Dense(15, activation='softmax'))
+
+
+def load_model():
+    model = Sequential()
+    _add_common_layers(model)
+    model.compile(**_get_compilation())
+    return model
+
+
+def load_dp_model(l2_norm_clip, noise_multiplier, num_microbatches=None, use_xla=True):
+    model = DPSequential(l2_norm_clip, noise_multiplier, num_microbatches, use_xla)
+    _add_common_layers(model)
+    model.compile(**_get_compilation())
     return model
 
 

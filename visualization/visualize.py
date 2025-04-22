@@ -17,7 +17,9 @@ def binary_visualize():
     binary_true = np.array([0 if class_names[t] == 'Normal' else 1 for t in true])
 
     plot_binary_confusion(binary_true, binary_pred, 'conf_2.png')
-    print(classification_report(binary_true, binary_pred))
+    report = classification_report(binary_true, binary_pred)
+    with open("classification_report_binary.txt", "w") as f:
+        f.write(report)
 
 
 def six_class_visualize():
@@ -35,7 +37,9 @@ def six_class_visualize():
     y_true_grouped = group_classes(true, six_class_map)
 
     plot_confusion_matrix(y_true_grouped, y_pred_grouped, labels, 'conf_6.png', title='6-Class Confusion Matrix')
-    print(classification_report(y_true_grouped, y_pred_grouped, target_names=labels))
+    report = classification_report(y_true_grouped, y_pred_grouped, target_names=labels)
+    with open("classification_report_six.txt", "w") as f:
+        f.write(report)
 
 
 def multiclass_visualize():
@@ -43,7 +47,9 @@ def multiclass_visualize():
               'Pwd', 'Port', 'Rans', 'SQL', 'Upload', 'Scan', 'XSS']
 
     plot_confusion_matrix(true, predicted, labels, 'conf_15.png', title='15-Class Confusion Matrix')
-    print(classification_report(true, predicted, target_names=labels))
+    report = classification_report(true, predicted, target_names=labels)
+    with open("classification_report_multi.txt", "w") as f:
+        f.write(report)
 
 
 def plot_metrics():
