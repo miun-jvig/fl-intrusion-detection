@@ -29,7 +29,7 @@ Download the Edge-IIoTset and create a folder called /datasets under /fl-intrusi
 **To simulate the setup**
 
 1. Change options.num-supernodes in pyproject.toml to how many clients you want (should be equal to the number of stratified splits you did in preprocessing)
-2. Update the variable "dataset_path" to '.../datasets/preprocessed_{partition_id}.csv' in client_fn()
+2. Update the variable "dataset_path" to `'.../datasets/preprocessed_{partition_id}.csv'` in client_fn()
 3. Open a terminal to start the simulation with the command `flwr run . fl-iot-local`
 
 **To run on embedded devices**
