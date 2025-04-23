@@ -5,7 +5,7 @@ from apps.task import load_model, create_run_dir
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
-from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
+from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement, compute_dp_sgd_privacy
 
 PROJECT_NAME = "fl-iot"
 
@@ -98,10 +98,19 @@ class CustomFedAvg(FedAvg):
                 delta=delta,
             )
 
+            eps, opt_order = compute_dp_sgd_privacy(
+                n=num_examples,
+                batch_size=batch_size,
+                noise_multiplier=noise_multiplier,
+                epochs=local_epochs,
+                delta=delta,
+            )
+
+            # tidigare {"Report": dp_report}
             self._store_results(
                 tag="dp_metrics",
                 metric_type="dp",
-                results_dict={"Report": dp_report},
+                results_dict={"dp_epsilon": eps, "dp_delta": delta},
             )
 
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):

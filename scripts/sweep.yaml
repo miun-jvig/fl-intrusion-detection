@@ -1,0 +1,9 @@
+method: grid
+metric:
+  name: centralized_evaluate_accuracy
+  goal: maximize
+parameters:
+  l2_norm_clip:
+    values: [4, 8, 16]
+  noise_multiplier:
+    values: [0.5, 1.0, 1.5]

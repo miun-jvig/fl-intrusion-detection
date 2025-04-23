@@ -2,23 +2,25 @@ from visualization.plot import plot_confusion_matrix, plot_binary_confusion, plo
 from visualization.utils import load_predictions_and_classes, group_classes
 import numpy as np
 from sklearn.metrics import classification_report
+from pathlib import Path
 
 
-home_path = 'C:/Users/joelv/PycharmProjects/thesis-ML-FL/'
-test_path = home_path + 'datasets/global_test.csv'
-current_output = 'outputs/2025-04-03/23-55-34/'
-best_model = 'model_state_acc_0.953_round_22.keras'
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-23' / '14-39-39'
+BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.715_round_3.keras'
+TEST_PATH = PROJECT_ROOT / 'datasets' / 'global_test.csv'
+VISUALIZATION_PATH = PROJECT_ROOT / 'visualization'
 
-class_names, predicted, true = load_predictions_and_classes(home_path + current_output + best_model, test_path)
+class_names, predicted, true = load_predictions_and_classes(BEST_MODEL, TEST_PATH)
 
 
 def binary_visualize():
     binary_pred = np.array([0 if class_names[p] == 'Normal' else 1 for p in predicted])
     binary_true = np.array([0 if class_names[t] == 'Normal' else 1 for t in true])
 
-    plot_binary_confusion(binary_true, binary_pred, 'conf_2.png')
+    plot_binary_confusion(binary_true, binary_pred, VISUALIZATION_PATH / 'conf_2.png')
     report = classification_report(binary_true, binary_pred)
-    with open("classification_report_binary.txt", "w") as f:
+    with open(VISUALIZATION_PATH / 'classification_report_binary.txt', "w") as f:
         f.write(report)
 
 
@@ -36,9 +38,10 @@ def six_class_visualize():
     y_pred_grouped = group_classes(predicted, six_class_map)
     y_true_grouped = group_classes(true, six_class_map)
 
-    plot_confusion_matrix(y_true_grouped, y_pred_grouped, labels, 'conf_6.png', title='6-Class Confusion Matrix')
+    plot_confusion_matrix(y_true_grouped, y_pred_grouped, labels, VISUALIZATION_PATH / 'conf_6.png',
+                          title='6-Class Confusion Matrix')
     report = classification_report(y_true_grouped, y_pred_grouped, target_names=labels)
-    with open("classification_report_six.txt", "w") as f:
+    with open(VISUALIZATION_PATH / 'classification_report_six.txt', "w") as f:
         f.write(report)
 
 
@@ -46,19 +49,21 @@ def multiclass_visualize():
     labels = ['Back', 'HTTP', 'ICMP', 'TCP', 'UDP', 'Fing', 'MITM', 'Normal',
               'Pwd', 'Port', 'Rans', 'SQL', 'Upload', 'Scan', 'XSS']
 
-    plot_confusion_matrix(true, predicted, labels, 'conf_15.png', title='15-Class Confusion Matrix')
+    plot_confusion_matrix(true, predicted, labels, VISUALIZATION_PATH / 'conf_15.png',
+                          title='15-Class Confusion Matrix')
     report = classification_report(true, predicted, target_names=labels)
-    with open("classification_report_multi.txt", "w") as f:
+    with open(VISUALIZATION_PATH / 'classification_report_multi.txt', "w") as f:
         f.write(report)
 
 
 def plot_metrics():
-    plot_eval_data(home_path + current_output + 'evaluation_results.json', 'evaluation_plot.png')
-    plot_fit_results(home_path + current_output + 'fit_results.json', 'fit_plot.png')
+    plot_eval_data(CURRENT_OUTPUT / 'evaluation_results.json', VISUALIZATION_PATH / 'evaluation_plot.png')
+    plot_fit_results(CURRENT_OUTPUT / 'fit_results.json', VISUALIZATION_PATH / 'fit_plot.png')
 
 
 # --- Choose what to run ---
-binary_visualize()
-multiclass_visualize()
-six_class_visualize()
-plot_metrics()
+if __name__ == "__main__":
+    binary_visualize()
+    multiclass_visualize()
+    six_class_visualize()
+    plot_metrics()

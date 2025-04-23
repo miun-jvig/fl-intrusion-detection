@@ -7,6 +7,8 @@ from apps.task import load_model
 from data_loading.data_loader import load_data
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 
 def get_evaluate_fn(x_test, y_test):
     # The `evaluate` function will be called by Flower after every round

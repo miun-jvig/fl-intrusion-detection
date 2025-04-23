@@ -3,10 +3,16 @@ from flwr.common import Context, logger
 from apps.task import load_model, load_dp_model
 from data_loading.data_loader import load_dataset
 from logging import INFO
+import tensorflow as tf
+
+gpus = tf.config.list_physical_devices("GPU")
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 class FlowerClient(NumPyClient):
-    def __init__(self, model, data, local_epochs, batch_size, noise_multiplier, delta):
+    def __init__(self, partition_id, model, data, local_epochs, batch_size, noise_multiplier, delta):
+        self.partition_id = partition_id
         self.model = model
         self.x_train, self.y_train, self.x_val, self.y_val, self.x_test, self.y_test = data
         self.local_epochs = local_epochs
@@ -21,7 +27,7 @@ class FlowerClient(NumPyClient):
             self.y_train,
             epochs=self.local_epochs,
             batch_size=self.batch_size,
-            validation_data=(self.x_val, self.y_val),
+            validation_data=(self.x_val, self.y_val)
         )
 
         results = {
@@ -67,7 +73,7 @@ def client_fn(context: Context):
         logger.log(INFO, f"⚙️ Using non-DP sequential model.")
         model = load_model()
 
-    return FlowerClient(model, data, local_epochs, batch_size, noise_multiplier, delta).to_client()
+    return FlowerClient(model, partition_id, data, local_epochs, batch_size, noise_multiplier, delta).to_client()
 
 
 app = ClientApp(client_fn)
