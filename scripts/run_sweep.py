@@ -58,6 +58,7 @@ def run_trial():
     run_cfg_str = (
         f"l2-norm-clip={cfg.l2_norm_clip} "
         f"noise-multiplier={cfg.noise_multiplier} "
+        f"local-epochs={cfg.local_epochs} "
     )
 
     subprocess.run(

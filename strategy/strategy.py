@@ -90,23 +90,16 @@ class CustomFedAvg(FedAvg):
                                    delta: float, round_num: int):
         """Compute (ε,δ) for on the final round and log it to W&B / store_results."""
         if round_num == self.total_rounds and self.use_dp:
-            dp_report = compute_dp_sgd_privacy_statement(
-                number_of_examples=num_examples,
-                batch_size=batch_size,
-                num_epochs=local_epochs,
-                noise_multiplier=noise_multiplier,
-                delta=delta,
-            )
+            total_epochs = local_epochs * self.total_rounds
 
             eps, opt_order = compute_dp_sgd_privacy(
                 n=num_examples,
                 batch_size=batch_size,
                 noise_multiplier=noise_multiplier,
-                epochs=local_epochs,
+                epochs=total_epochs,
                 delta=delta,
             )
 
-            # tidigare {"Report": dp_report}
             self._store_results(
                 tag="dp_metrics",
                 metric_type="dp",

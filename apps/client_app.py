@@ -11,7 +11,7 @@ for gpu in gpus:
 
 
 class FlowerClient(NumPyClient):
-    def __init__(self, partition_id, model, data, local_epochs, batch_size, noise_multiplier, delta):
+    def __init__(self, model, partition_id, data, local_epochs, batch_size, noise_multiplier, delta):
         self.partition_id = partition_id
         self.model = model
         self.x_train, self.y_train, self.x_val, self.y_val, self.x_test, self.y_test = data
@@ -62,7 +62,8 @@ def client_fn(context: Context):
     delta = context.run_config["delta"]
 
     # Read the node_config to know where dataset is located
-    dataset_path = context.node_config["dataset-path"]
+    # dataset_path = context.node_config["dataset-path"]
+    dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
     data = load_dataset(dataset_path)
 
     # Load model

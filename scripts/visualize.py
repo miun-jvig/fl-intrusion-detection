@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-23' / '14-39-39'
-BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.715_round_3.keras'
+CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-23' / '23-36-29'
+BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.752_round_10.keras'
 TEST_PATH = PROJECT_ROOT / 'datasets' / 'global_test.csv'
 VISUALIZATION_PATH = PROJECT_ROOT / 'visualization'
 
