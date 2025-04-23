@@ -31,7 +31,7 @@ Download the Edge-IIoTset and create a folder called /datasets under /fl-intrusi
 **To simulate the setup**
 
 1. Change options.num-supernodes in pyproject.toml to how many clients you want (should be equal to the number of stratified splits you did in preprocessing)
-2. Update the variable "dataset_path" to `'.../datasets/preprocessed_{partition_id}.csv'` in client_fn()
+2. Update the variable "dataset_path" to `'.../datasets/preprocessed_{partition_id}.csv'` in client_fn() under `apps/client_app.py`
 3. Open a terminal to start the simulation with the command `flwr run . fl-iot-local`
 
 **To run on embedded devices**
@@ -65,7 +65,7 @@ To visualize and make hyperparameter tuning easier:
     --count TOTAL_TRIALS
     ```
 
-This will start a W&B sweep with your specified trials. Results and metrics will be streamed to your W&B project. **Note:** I know it's a bit unitiative but `use-wandb` must be set to `false` in `pyproject.toml`.
+This will start a W&B sweep with your specified trials. Results and metrics will be streamed to your W&B project. **Note:** I know it's a bit unintuitive but `use-wandb` must be set to `false` in `pyproject.toml`.
 
 ## 4. Visualization
 Visualization is done automatically if use-wandb is set to true in `pyproject.toml` or by running `python -m scripts.visualize`
