@@ -25,7 +25,7 @@ pip install -e .
 Start by cloning this project, then:
 
 ## 1. Preprocessing
-Download the Edge-IIoTset and create a folder called /datasets under /fl-intrusion-detection-dp/, then extract the contents of the Edge-IIoTset into that folder. Change num_clients in scripts/preprocessing to how many clients you want, then run `python scripts/preprocessing.py` to get a stratified split of the set. Copy the preprocessed dataset (output from preprocessing.py) to your Raspberry Pi in a location of your choice. If you just want to simulate a run, then you can keep the preprocessed dataset in /datasets.
+Download the Edge-IIoTset and create a folder called /datasets under /fl-intrusion-detection-dp/, then extract the contents of the Edge-IIoTset into that folder. Run `python scripts/preprocessing.py --test-size x --num-clients y` to get a stratified split of the set with x test-size and y number of clients. Copy the preprocessed dataset (output from preprocessing.py) to your Raspberry Pi in a location of your choice. If you just want to simulate a run, then you can keep the preprocessed dataset in /datasets.
 
 ## 2. Execution and logging
 **To simulate the setup**
@@ -68,7 +68,19 @@ To visualize and make hyperparameter tuning easier:
 This will start a W&B sweep with your specified trials. Results and metrics will be streamed to your W&B project. **Note:** I know it's a bit unintuitive but `use-wandb` must be set to `false` in `pyproject.toml`.
 
 ## 4. Visualization
-Visualization is done automatically if use-wandb is set to true in `pyproject.toml` or by running `python -m scripts.visualize`
+Visualization is done automatically if use-wandb is set to true in `pyproject.toml` or by running `python -m scripts.visualize`. Note that you have to change some variables in `scripts/visualize.py` to match the output folder and the model you wish to visualize.
 
 # Results
-The model (non-DP) is currently achieving a 96 % federated/centralized evaluation accuracy on the global test set using 40 FL rounds, 3 local epochs, and a batch size of 64. In comparison, my centralized implementation achieves a 97 % accuracy on the same test set.
+### Centralized
+- **Accuracy:** ~ 99 %  
+- **Training:** 25 epochs, batch size = 800
+
+### Federated
+- **Evaluation Accuracy:** ~ 96 % (federated & centralized)  
+- **Setup:** 25 rounds, 3 local epochs, batch size = 64
+
+### Differentially Private Federated
+- **Evaluation Accuracy:** ~ 94 % (federated & centralized)  
+- **Privacy Budget:** ε ≈ 7.82, δ = 1 × 10⁻⁷  
+- **DP Parameters:** L₂-norm clip = 4.0, noise multiplier = 0.5  
+- **Setup:** 25 rounds, 3 local epochs, batch size = 64
