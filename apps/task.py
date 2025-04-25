@@ -16,33 +16,25 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 def _get_compilation():
-    lr_schedule = ExponentialDecay(0.001, decay_steps=5000, decay_rate=0.9)
+    lr_schedule = ExponentialDecay(1e-3, decay_steps=5000, decay_rate=0.9)
     optimizer = Adam(learning_rate=lr_schedule)
     compile_args = dict(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     return compile_args
 
 
-def _add_common_layers(model):
-    model.add(Input(shape=(97,)))
-    model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(1e-4)))
-    model.add(layers.Dropout(0.3))
-    model.add(layers.Dense(15, activation='softmax'))
+def _add_layers(model):
+    model.add(Input(shape=(95,)))
+    model.add(layers.Dense(90, activation="relu", kernel_regularizer=regularizers.l2(1e-4)))
+    model.add(layers.Dense(90, activation="relu", kernel_regularizer=regularizers.l2(1e-4)))
+    model.add(layers.Dense(15, activation="softmax"))
 
 
-def load_model():
-    model = Sequential()
-    _add_common_layers(model)
-    model.compile(**_get_compilation())
-    return model
+def load_model(*, use_dp, l2_norm_clip, noise_multiplier, num_microbatches=None, use_xla=True):
+    seq_cls = DPSequential if use_dp else Sequential
+    init_args = (l2_norm_clip, noise_multiplier, num_microbatches, use_xla) if use_dp else ()
+    model = seq_cls(*init_args)  # DPSequential(...) or Sequential()
+    _add_layers(model)
 
-
-def load_dp_model(l2_norm_clip, noise_multiplier, num_microbatches=None, use_xla=True):
-    model = DPSequential(l2_norm_clip, noise_multiplier, num_microbatches, use_xla)
-    _add_common_layers(model)
     model.compile(**_get_compilation())
     return model
 

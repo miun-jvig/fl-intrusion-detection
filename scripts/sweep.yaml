@@ -4,8 +4,6 @@ metric:
   goal: maximize
 parameters:
   l2_norm_clip:
-    values: [1.0, 2.0]
+    values: [1.0, 2.0, 4.0]
   noise_multiplier:
-    values: [0.05, 0.1, 0.2, 0.5]
-  local_epochs:
-    values: [2, 3, 4]
+    values: [0.5, 1.0, 1.5]

@@ -5,7 +5,7 @@ from apps.task import load_model, create_run_dir
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
-from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement, compute_dp_sgd_privacy
+from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy
 
 PROJECT_NAME = "fl-iot"
 
@@ -25,7 +25,10 @@ class CustomFedAvg(FedAvg):
         self.save_path, self.run_dir = create_run_dir(run_config)
         self.total_rounds = run_config["num-server-rounds"]
         self.use_dp = run_config["use-dp"]
+        self.l2_norm_clip = run_config["l2-norm-clip"]
+        self.noise_multiplier = run_config["noise-multiplier"]
         self.use_wandb = use_wandb
+        self.dp_args = dict(use_dp=self.use_dp, l2_norm_clip=self.l2_norm_clip, noise_multiplier=self.noise_multiplier)
         # Initialise W&B if set
         if use_wandb:
             self._init_wandb_project()
@@ -77,14 +80,12 @@ class CustomFedAvg(FedAvg):
             # model and save the state dict.
             # Converts flwr.common.Parameters to ndarrays
             ndarrays = parameters_to_ndarrays(parameters)
-            model = load_model()
+            model = load_model(**self.dp_args)
             model.set_weights(ndarrays)
+
             # Save the PyTorch model
-            file_name = (
-                    self.save_path
-                    / f"model_state_acc_{accuracy:.3f}_round_{round}.keras"
-            )
-            model.save(file_name)
+            file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{round}.h5")
+            model.save_weights(str(file_name))
 
     def _compute_and_store_privacy(self, num_examples: int, batch_size: int, local_epochs: int, noise_multiplier: float,
                                    delta: float, round_num: int):

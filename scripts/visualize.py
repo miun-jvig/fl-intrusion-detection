@@ -3,15 +3,17 @@ from visualization.utils import load_predictions_and_classes, group_classes
 import numpy as np
 from sklearn.metrics import classification_report
 from pathlib import Path
+from visualization.utils import load_run_config
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-23' / '23-36-29'
-BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.752_round_10.keras'
+CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-25' / '14-56-41'
+BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.779_round_1.h5'
 TEST_PATH = PROJECT_ROOT / 'datasets' / 'global_test.csv'
 VISUALIZATION_PATH = PROJECT_ROOT / 'visualization'
+cfg = load_run_config(CURRENT_OUTPUT)
 
-class_names, predicted, true = load_predictions_and_classes(BEST_MODEL, TEST_PATH)
+class_names, predicted, true = load_predictions_and_classes(BEST_MODEL, TEST_PATH, cfg)
 
 
 def binary_visualize():

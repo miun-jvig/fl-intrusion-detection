@@ -10,10 +10,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def get_evaluate_fn(x_test, y_test):
+def get_evaluate_fn(x_test, y_test, **model_kwargs):
     # The `evaluate` function will be called by Flower after every round
     def evaluate(server_round, parameters_ndarrays, config):
-        model = load_model()
+        model = load_model(**model_kwargs)
         model.set_weights(parameters_ndarrays)
         loss, accuracy = model.evaluate(x_test, y_test)
         return loss, {"centralized_evaluate_accuracy": accuracy}
@@ -54,20 +54,23 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
 
 def server_fn(context: fl.common.Context):
     """Construct components that set the ServerApp behaviour."""
-    # Initialize model parameters
-    ndarrays = load_model().get_weights()
-    parameters = ndarrays_to_parameters(ndarrays)
-
     # Read run_config to fetch hyperparameters relevant to this run
     run_config = context.run_config
     fraction_fit = run_config["fraction-fit"]
     use_wandb = run_config["use-wandb"]
+    use_dp = run_config["use-dp"]
     fraction_evaluate = run_config["fraction-evaluate"]
     num_server_rounds = run_config["num-server-rounds"]
+    l2_norm_clip = run_config["l2-norm-clip"]
+    noise_multiplier = run_config["noise-multiplier"]
+    dp_args = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
+
+    # Initialize model parameters
+    ndarrays = load_model(**dp_args).get_weights()
+    parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
-    # test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
-    test_path = PROJECT_ROOT / 'datasets' / 'global_test.csv'
+    test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
     _, x_test, y_test = load_data(test_path)
 
     # Define the strategy
@@ -77,7 +80,7 @@ def server_fn(context: fl.common.Context):
         use_wandb=use_wandb,
         fraction_evaluate=fraction_evaluate,
         evaluate_metrics_aggregation_fn=weighted_average,
-        evaluate_fn=get_evaluate_fn(x_test, y_test),
+        evaluate_fn=get_evaluate_fn(x_test, y_test, **dp_args),
         fit_metrics_aggregation_fn=fit_metrics_fn,
         initial_parameters=parameters,
     )

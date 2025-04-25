@@ -17,9 +17,9 @@ def load_dataset(file_path):
 
 def load_data(file_path):
     df = pd.read_csv(file_path, low_memory=False)
-    df.head(5)
-    labels = 'Attack_type'
+    drop_cols = ["Unnamed: 0", "Attack_label", "Attack_type"]
+    df_feats = df.drop(columns=[c for c in drop_cols if c in df.columns])
 
-    x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
-    y = utils.to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
+    x = df_feats.to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
+    y = utils.to_categorical(LabelEncoder().fit_transform(df['Attack_type']))  # Label: 'Attack_type', one hot encoded
     return df, x, y

@@ -12,9 +12,7 @@ os.environ["WANDB_DIR"] = str(PROJECT_ROOT / "wandb")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Launch a W&B sweep"
-    )
+    parser = argparse.ArgumentParser(description="Launch a W&B sweep")
     parser.add_argument(
         "--sweep-spec",
         type=Path,
@@ -58,7 +56,6 @@ def run_trial():
     run_cfg_str = (
         f"l2-norm-clip={cfg.l2_norm_clip} "
         f"noise-multiplier={cfg.noise_multiplier} "
-        f"local-epochs={cfg.local_epochs} "
     )
 
     subprocess.run(

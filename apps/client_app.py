@@ -1,6 +1,6 @@
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context, logger
-from apps.task import load_model, load_dp_model
+from apps.task import load_model
 from data_loading.data_loader import load_dataset
 from logging import INFO
 import tensorflow as tf
@@ -60,19 +60,18 @@ def client_fn(context: Context):
     batch_size = context.run_config["batch-size"]
     local_epochs = context.run_config["local-epochs"]
     delta = context.run_config["delta"]
+    dp_kwargs = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
 
     # Read the node_config to know where dataset is located
-    # dataset_path = context.node_config["dataset-path"]
-    dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
+    dataset_path = context.node_config["dataset-path"]
     data = load_dataset(dataset_path)
 
     # Load model
+    model = load_model(**dp_kwargs)
     if use_dp:
         logger.log(INFO, "⚙️ Using DP sequential model.")
-        model = load_dp_model(l2_norm_clip, noise_multiplier)
     else:
         logger.log(INFO, f"⚙️ Using non-DP sequential model.")
-        model = load_model()
 
     return FlowerClient(model, partition_id, data, local_epochs, batch_size, noise_multiplier, delta).to_client()
 
