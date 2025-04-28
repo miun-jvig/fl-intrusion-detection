@@ -71,10 +71,6 @@ This will start a W&B sweep with your specified trials. Results and metrics will
 Visualization is done automatically if use-wandb is set to true in `pyproject.toml` or by running `python -m scripts.visualize`. Note that you have to change some variables in `scripts/visualize.py` to match the output folder and the model you wish to visualize.
 
 # Results
-### Centralized
-- **Accuracy:** ~ 99 %  
-- **Training:** 25 epochs, batch size = 800
-
 ### Federated
 - **Evaluation Accuracy:** ~ 96 % (federated & centralized)  
 - **Setup:** 25 rounds, 3 local epochs, batch size = 64
