@@ -5,7 +5,7 @@ from apps.task import load_model, create_run_dir
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
-from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy
+from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
 
 PROJECT_NAME = "fl-iot"
 
@@ -89,23 +89,23 @@ class CustomFedAvg(FedAvg):
             file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{round}.h5")
             model.save_weights(str(file_name))
 
-    def _compute_and_store_privacy(self, batch_size: int, local_epochs: int, noise_multiplier: float,
-                                   delta: float, round_num: int):
+    def _compute_and_store_privacy(self, num_examples: int, batch_size: int, local_epochs: int, noise_multiplier: float,
+                                   delta: float):
         """Compute (ε,δ) for on the final round and log it to W&B / store_results."""
         total_epochs = local_epochs * self.total_rounds
 
-        eps, opt_order = compute_dp_sgd_privacy(
-            n=1814187,
+        report = compute_dp_sgd_privacy_statement(
+            number_of_examples=num_examples,
             batch_size=batch_size,
             noise_multiplier=noise_multiplier,
-            epochs=total_epochs,
+            num_epochs=total_epochs,
             delta=delta,
         )
 
         self._store_results(
             tag="dp_metrics",
             metric_type="dp",
-            results_dict={"dp_epsilon": eps, "dp_delta": delta},
+            results_dict={"Report": report},
         )
 
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):
@@ -124,6 +124,15 @@ class CustomFedAvg(FedAvg):
     def aggregate_fit(self, server_round, results, failures):
         # first call the parent so you still get the global loss & metrics
         loss, metrics = super().aggregate_fit(server_round, results, failures)
+
+        if server_round == self.total_rounds and self.use_dp:
+            self._compute_and_store_privacy(
+                metrics["num_examples"],
+                self.run_config["batch-size"],
+                self.run_config["local-epochs"],
+                self.run_config["noise-multiplier"],
+                self.run_config["delta"],
+            )
 
         client_dict = {}
         for client_proxy, fit_res in results:
@@ -153,15 +162,6 @@ class CustomFedAvg(FedAvg):
     def evaluate(self, server_round, parameters):
         """Run centralized evaluation if callback was passed to strategy init."""
         loss, metrics = super().evaluate(server_round, parameters)
-
-        if server_round == self.total_rounds and self.use_dp:
-            self._compute_and_store_privacy(
-                self.run_config["batch-size"],
-                self.run_config["local-epochs"],
-                self.run_config["noise-multiplier"],
-                self.run_config["delta"],
-                server_round
-            )
 
         if server_round != 0:
             # Save model if new best central accuracy is found

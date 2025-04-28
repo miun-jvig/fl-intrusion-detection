@@ -58,7 +58,7 @@ def encode_text_dummy(df_data, name):
 def save_client_csvs(df_client, client_idx, out_dir: Path):
     out_dir.mkdir(parents=True, exist_ok=True)
     for cid, idx in client_idx.items():
-        print(f"Saved dirichlet split dataset preprocessed datasets for device {i}")
+        print(f"Saved dirichlet split dataset preprocessed datasets for device {cid}")
         df_client.iloc[idx].to_csv(out_dir / f"preprocessed_{cid}.csv", index=False)
 
 

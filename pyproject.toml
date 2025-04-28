@@ -33,16 +33,16 @@ serverapp = "apps.server_app:app"
 clientapp = "apps.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 5
+num-server-rounds = 15
 fraction-evaluate = 1.0
-local-epochs = 1
-batch-size = 800
+local-epochs = 2
+batch-size = 64
 fraction-fit = 1.0
 l2-norm-clip = 4.0
-noise-multiplier = 5.0
+noise-multiplier = 1.0
 delta = 1e-7
 use-dp = true
-use-wandb = true
+use-wandb = false
 
 [tool.flwr.federations]
 default = "fl-iot"

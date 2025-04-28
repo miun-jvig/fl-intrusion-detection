@@ -33,6 +33,8 @@ def fit_metrics_fn(metrics: List[Tuple[int, Metrics]]) -> Metrics:
         "val_loss": sum(m["val_loss"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
     }
+    worst_n = min(num_examples for num_examples, _ in metrics)
+    aggregated["num_examples"] = worst_n
     return aggregated
 
 
