@@ -22,6 +22,7 @@ class CustomFedAvg(FedAvg):
         super().__init__(*args, **kwargs)
 
         # Create a directory where to save results from this run
+        self.run_config = run_config
         self.save_path, self.run_dir = create_run_dir(run_config)
         self.total_rounds = run_config["num-server-rounds"]
         self.use_dp = run_config["use-dp"]
@@ -29,6 +30,7 @@ class CustomFedAvg(FedAvg):
         self.noise_multiplier = run_config["noise-multiplier"]
         self.use_wandb = use_wandb
         self.dp_args = dict(use_dp=self.use_dp, l2_norm_clip=self.l2_norm_clip, noise_multiplier=self.noise_multiplier)
+
         # Initialise W&B if set
         if use_wandb:
             self._init_wandb_project()
@@ -87,25 +89,24 @@ class CustomFedAvg(FedAvg):
             file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{round}.h5")
             model.save_weights(str(file_name))
 
-    def _compute_and_store_privacy(self, num_examples: int, batch_size: int, local_epochs: int, noise_multiplier: float,
+    def _compute_and_store_privacy(self, batch_size: int, local_epochs: int, noise_multiplier: float,
                                    delta: float, round_num: int):
         """Compute (ε,δ) for on the final round and log it to W&B / store_results."""
-        if round_num == self.total_rounds and self.use_dp:
-            total_epochs = local_epochs * self.total_rounds
+        total_epochs = local_epochs * self.total_rounds
 
-            eps, opt_order = compute_dp_sgd_privacy(
-                n=num_examples,
-                batch_size=batch_size,
-                noise_multiplier=noise_multiplier,
-                epochs=total_epochs,
-                delta=delta,
-            )
+        eps, opt_order = compute_dp_sgd_privacy(
+            n=1814187,
+            batch_size=batch_size,
+            noise_multiplier=noise_multiplier,
+            epochs=total_epochs,
+            delta=delta,
+        )
 
-            self._store_results(
-                tag="dp_metrics",
-                metric_type="dp",
-                results_dict={"dp_epsilon": eps, "dp_delta": delta},
-            )
+        self._store_results(
+            tag="dp_metrics",
+            metric_type="dp",
+            results_dict={"dp_epsilon": eps, "dp_delta": delta},
+        )
 
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):
         """A helper method that stores results and logs them to W&B if enabled."""
@@ -121,41 +122,58 @@ class CustomFedAvg(FedAvg):
             wandb.log(results_dict, step=server_round)
 
     def aggregate_fit(self, server_round, results, failures):
+        # first call the parent so you still get the global loss & metrics
         loss, metrics = super().aggregate_fit(server_round, results, failures)
 
-        self._compute_and_store_privacy(metrics["num_examples"], metrics["batch_size"], metrics["local_epochs"],
-                                        metrics["noise_multiplier"], metrics["delta"], server_round)
+        client_dict = {}
+        for client_proxy, fit_res in results:
+            pid = fit_res.metrics.get("partition_id", client_proxy.cid)
+            m = fit_res.metrics
+            client_dict[f"client_{pid}/train_acc"] = m["accuracy"]
+            client_dict[f"client_{pid}/val_acc"] = m["val_accuracy"]
+            client_dict[f"client_{pid}/train_loss"] = m["loss"]
+            client_dict[f"client_{pid}/val_loss"] = m["val_loss"]
 
-        fit_metrics = {
-            "training_loss": metrics["training_loss"],
-            "training_accuracy": metrics["training_accuracy"],
-            "val_loss": metrics["val_loss"],
-            "val_accuracy": metrics["val_accuracy"],
-        }
-
-        # Store and log fit metrics
         self.store_results_and_log(
             server_round=server_round,
-            tag="fit_metrics",
+            tag=f"client_fit",
             metric_type="fit",
-            results_dict=fit_metrics,
+            results_dict=client_dict
         )
+
+        self.store_results_and_log(
+            server_round=server_round,
+            tag="all_clients_fit",
+            metric_type="fit",
+            results_dict={**metrics}
+        )
+
         return loss, metrics
 
     def evaluate(self, server_round, parameters):
         """Run centralized evaluation if callback was passed to strategy init."""
         loss, metrics = super().evaluate(server_round, parameters)
 
-        # Save model if new best central accuracy is found
-        self._update_best_acc(server_round, metrics["centralized_evaluate_accuracy"], parameters)
+        if server_round == self.total_rounds and self.use_dp:
+            self._compute_and_store_privacy(
+                self.run_config["batch-size"],
+                self.run_config["local-epochs"],
+                self.run_config["noise-multiplier"],
+                self.run_config["delta"],
+                server_round
+            )
 
-        # Store and log
-        self.store_results_and_log(
-            server_round=server_round,
-            tag="centralized_evaluate",
-            metric_type="evaluation",
-            results_dict={"centralized_evaluate_loss": loss, **metrics},
-        )
+        if server_round != 0:
+            # Save model if new best central accuracy is found
+            self._update_best_acc(server_round, metrics["centralized_evaluate_accuracy"], parameters)
+
+            # Store and log
+            self.store_results_and_log(
+                server_round=server_round,
+                tag="centralized_evaluate",
+                metric_type="evaluation",
+                results_dict={"centralized_evaluate_loss": loss, **metrics},
+            )
         return loss, metrics
 
     def aggregate_evaluate(self, server_round, results, failures):

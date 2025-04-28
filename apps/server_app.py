@@ -33,14 +33,6 @@ def fit_metrics_fn(metrics: List[Tuple[int, Metrics]]) -> Metrics:
         "val_loss": sum(m["val_loss"] * num_examples for num_examples, m in metrics) / sum(
             num_examples for num_examples, _ in metrics),
     }
-
-    num_examples, first_metrics = metrics[0]
-    aggregated["num_examples"] = num_examples
-    aggregated["batch_size"] = first_metrics["batch_size"]
-    aggregated["local_epochs"] = first_metrics["local_epochs"]
-    aggregated["noise_multiplier"] = first_metrics["noise_multiplier"]
-    aggregated["delta"] = first_metrics["delta"]
-
     return aggregated
 
 
@@ -70,7 +62,8 @@ def server_fn(context: fl.common.Context):
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
-    test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
+    # test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
+    test_path = PROJECT_ROOT / 'datasets' / 'global_test.csv'
     _, x_test, y_test = load_data(test_path)
 
     # Define the strategy

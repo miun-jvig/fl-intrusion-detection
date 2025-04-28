@@ -4,10 +4,23 @@ from apps.task import load_model
 from data_loading.data_loader import load_dataset
 from logging import INFO
 import tensorflow as tf
+import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
 
 gpus = tf.config.list_physical_devices("GPU")
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
+
+
+def make_class_weight(y_onehot):
+    y_ind = np.argmax(y_onehot, axis=1)
+    classes = np.unique(y_ind)
+    weights = compute_class_weight(
+        class_weight="balanced",
+        classes=classes,
+        y=y_ind,
+    )
+    return dict(zip(classes.tolist(), weights.tolist()))
 
 
 class FlowerClient(NumPyClient):
@@ -15,6 +28,7 @@ class FlowerClient(NumPyClient):
         self.partition_id = partition_id
         self.model = model
         self.x_train, self.y_train, self.x_val, self.y_val, self.x_test, self.y_test = data
+        self.class_weight = make_class_weight(self.y_train)
         self.local_epochs = local_epochs
         self.batch_size = batch_size
         self.noise_multiplier = noise_multiplier
@@ -27,7 +41,8 @@ class FlowerClient(NumPyClient):
             self.y_train,
             epochs=self.local_epochs,
             batch_size=self.batch_size,
-            validation_data=(self.x_val, self.y_val)
+            validation_data=(self.x_val, self.y_val),
+            class_weight=self.class_weight,
         )
 
         results = {
@@ -35,11 +50,7 @@ class FlowerClient(NumPyClient):
             "accuracy": history.history["accuracy"][0],
             "val_loss": history.history["val_loss"][0],
             "val_accuracy": history.history["val_accuracy"][0],
-            # pass the raw DP params along to be used later for dp evaluation
-            "batch_size": self.batch_size,
-            "local_epochs": self.local_epochs,
-            "noise_multiplier": self.noise_multiplier,
-            "delta": self.delta,
+            "partition_id": self.partition_id,
         }
         return self.model.get_weights(), len(self.x_train), results
 
@@ -63,7 +74,8 @@ def client_fn(context: Context):
     dp_kwargs = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
 
     # Read the node_config to know where dataset is located
-    dataset_path = context.node_config["dataset-path"]
+    # dataset_path = context.node_config["dataset-path"]
+    dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
     data = load_dataset(dataset_path)
 
     # Load model
