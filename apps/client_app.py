@@ -72,8 +72,8 @@ def client_fn(context: Context):
     delta = context.run_config["delta"]
 
     # Read the node_config to know where dataset is located
-    # dataset_path = context.node_config["dataset-path"]
-    dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
+    dataset_path = context.node_config["dataset-path"]
+    # dataset_path = fr'C:\Users\joelv\PycharmProjects\thesis-ML-FL\datasets\preprocessed_{partition_id}.csv'
     data = load_dataset(dataset_path)
 
     # Load model

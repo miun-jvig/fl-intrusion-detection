@@ -64,8 +64,8 @@ def server_fn(context: fl.common.Context):
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
-    # test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
-    test_path = PROJECT_ROOT / 'datasets' / 'global_test.csv'
+    test_path = Path.home() / 'fl-intrusion-detection' / 'datasets' / 'global_test.csv'
+    # test_path = PROJECT_ROOT / 'datasets' / 'global_test.csv'
     _, x_test, y_test = load_data(test_path)
 
     # Define the strategy
