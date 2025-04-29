@@ -5,7 +5,6 @@ from apps.task import load_model, create_run_dir
 from flwr.common import logger, parameters_to_ndarrays
 from flwr.common.typing import UserConfig
 from flwr.server.strategy import FedAvg
-from tensorflow_privacy.privacy.analysis.compute_dp_sgd_privacy_lib import compute_dp_sgd_privacy_statement
 
 PROJECT_NAME = "fl-iot"
 
@@ -29,7 +28,6 @@ class CustomFedAvg(FedAvg):
         self.l2_norm_clip = run_config["l2-norm-clip"]
         self.noise_multiplier = run_config["noise-multiplier"]
         self.use_wandb = use_wandb
-        self.dp_args = dict(use_dp=self.use_dp, l2_norm_clip=self.l2_norm_clip, noise_multiplier=self.noise_multiplier)
 
         # Initialise W&B if set
         if use_wandb:
@@ -69,7 +67,7 @@ class CustomFedAvg(FedAvg):
         with open(file_path, "w", encoding="utf-8") as fp:
             json.dump(results_dict_to_store, fp)
 
-    def _update_best_acc(self, round, accuracy, parameters):
+    def _update_best_acc(self, server_round, accuracy, parameters):
         """Determines if a new best global model has been found.
 
         If so, the model checkpoint is saved to disk.
@@ -82,31 +80,12 @@ class CustomFedAvg(FedAvg):
             # model and save the state dict.
             # Converts flwr.common.Parameters to ndarrays
             ndarrays = parameters_to_ndarrays(parameters)
-            model = load_model(**self.dp_args)
+            model = load_model()
             model.set_weights(ndarrays)
 
             # Save the PyTorch model
-            file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{round}.h5")
+            file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{server_round}.h5")
             model.save_weights(str(file_name))
-
-    def _compute_and_store_privacy(self, num_examples: int, batch_size: int, local_epochs: int, noise_multiplier: float,
-                                   delta: float):
-        """Compute (ε,δ) for on the final round and log it to W&B / store_results."""
-        total_epochs = local_epochs * self.total_rounds
-
-        report = compute_dp_sgd_privacy_statement(
-            number_of_examples=num_examples,
-            batch_size=batch_size,
-            noise_multiplier=noise_multiplier,
-            num_epochs=total_epochs,
-            delta=delta,
-        )
-
-        self._store_results(
-            tag="dp_metrics",
-            metric_type="dp",
-            results_dict={"Report": report},
-        )
 
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):
         """A helper method that stores results and logs them to W&B if enabled."""
@@ -124,15 +103,6 @@ class CustomFedAvg(FedAvg):
     def aggregate_fit(self, server_round, results, failures):
         # first call the parent so you still get the global loss & metrics
         loss, metrics = super().aggregate_fit(server_round, results, failures)
-
-        if server_round == self.total_rounds and self.use_dp:
-            self._compute_and_store_privacy(
-                metrics["num_examples"],
-                self.run_config["batch-size"],
-                self.run_config["local-epochs"],
-                self.run_config["noise-multiplier"],
-                self.run_config["delta"],
-            )
 
         client_dict = {}
         for client_proxy, fit_res in results:

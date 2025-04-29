@@ -6,7 +6,6 @@ from datetime import datetime
 import argparse
 import yaml
 import os
-import re
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 os.environ["WANDB_DIR"] = str(PROJECT_ROOT / "wandb")
@@ -55,7 +54,8 @@ def run_trial():
     cfg = run.config
 
     run_cfg_str = (
-        f"l2-norm-clip={cfg.l2_norm_clip} "
+        f"batch-size={cfg.batch_size} "
+        # f"l2-norm-clip={cfg.l2_norm_clip} "
         f"noise-multiplier={cfg.noise_multiplier} "
     )
 
@@ -66,24 +66,12 @@ def run_trial():
 
     base_dir = find_latest_run_dir()
     evals = json.load(open(base_dir / "evaluation_results.json"))["centralized_evaluate"][-1]
-    dp = json.load(open(base_dir / "dp_results.json"))["dp_metrics"][-1]
-    report = dp["Report"]
-
-    m = re.search(r"Epsilon assuming Poisson sampling.*?([0-9]+\.[0-9]+)", report, re.DOTALL)
-    if m:
-        dp_eps = float(m.group(1))
-    else:
-        m2 = re.search(r"Epsilon with each example occurring once per epoch.*?([0-9]+\.[0-9]+)", report, re.DOTALL)
-        dp_eps = float(m2.group(1)) if m2 else None
 
     run.log({
         "centralized_evaluate_loss": evals["centralized_evaluate_loss"],
         "centralized_evaluate_accuracy": evals["centralized_evaluate_accuracy"],
-        "dp_epsilon": dp_eps,
     })
     run.summary["centralized_evaluate_accuracy"] = evals["centralized_evaluate_accuracy"]
-    if "dp_epsilon" in dp:
-        run.summary["dp_epsilon"] = dp["dp_epsilon"]
     run.finish()
 
 

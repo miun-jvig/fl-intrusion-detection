@@ -33,13 +33,13 @@ serverapp = "apps.server_app:app"
 clientapp = "apps.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 15
+num-server-rounds = 25
 fraction-evaluate = 1.0
 local-epochs = 2
-batch-size = 64
+batch-size = 128
 fraction-fit = 1.0
-l2-norm-clip = 4.0
-noise-multiplier = 1.0
+l2-norm-clip = 1.0
+noise-multiplier = 0.1
 delta = 1e-7
 use-dp = true
 use-wandb = false

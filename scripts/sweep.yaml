@@ -3,7 +3,7 @@ metric:
   name: centralized_evaluate_accuracy
   goal: maximize
 parameters:
-  l2_norm_clip:
-    values: [1.0]
   noise_multiplier:
-    values: [1.0]
+    values: [0.1, 0.293]
+  batch_size:
+    values: [128, 256, 512, 800]

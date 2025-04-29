@@ -86,7 +86,7 @@ def plot_aggregated_fit_results(data_file, save_filename):
     loss = [entry['training_loss'] for entry in data['fit_metrics']]
     val_loss = [entry['val_loss'] for entry in data['fit_metrics']]
 
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
 
     create_plot(ax1, accuracy, val_accuracy, 'Accuracy', 'Round',
                 'Aggregated Accuracy', ['Training Accuracy', 'Validation Accuracy'])

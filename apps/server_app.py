@@ -6,14 +6,15 @@ from strategy.strategy import CustomFedAvg
 from apps.task import load_model
 from data_loading.data_loader import load_data
 from pathlib import Path
+from flwr.server.strategy import DifferentialPrivacyServerSideAdaptiveClipping
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-def get_evaluate_fn(x_test, y_test, **model_kwargs):
+def get_evaluate_fn(x_test, y_test):
     # The `evaluate` function will be called by Flower after every round
     def evaluate(server_round, parameters_ndarrays, config):
-        model = load_model(**model_kwargs)
+        model = load_model()
         model.set_weights(parameters_ndarrays)
         loss, accuracy = model.evaluate(x_test, y_test)
         return loss, {"centralized_evaluate_accuracy": accuracy}
@@ -57,10 +58,9 @@ def server_fn(context: fl.common.Context):
     num_server_rounds = run_config["num-server-rounds"]
     l2_norm_clip = run_config["l2-norm-clip"]
     noise_multiplier = run_config["noise-multiplier"]
-    dp_args = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
 
     # Initialize model parameters
-    ndarrays = load_model(**dp_args).get_weights()
+    ndarrays = load_model().get_weights()
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Test data_loading
@@ -75,12 +75,20 @@ def server_fn(context: fl.common.Context):
         use_wandb=use_wandb,
         fraction_evaluate=fraction_evaluate,
         evaluate_metrics_aggregation_fn=weighted_average,
-        evaluate_fn=get_evaluate_fn(x_test, y_test, **dp_args),
+        evaluate_fn=get_evaluate_fn(x_test, y_test),
         fit_metrics_aggregation_fn=fit_metrics_fn,
         initial_parameters=parameters,
     )
-    config = ServerConfig(num_rounds=num_server_rounds)
+    if use_dp:
+        dp_strategy = DifferentialPrivacyServerSideAdaptiveClipping(
+            strategy=strategy,
+            initial_clipping_norm=l2_norm_clip,
+            noise_multiplier=noise_multiplier,
+            num_sampled_clients=5,
+        )
+        strategy = dp_strategy
 
+    config = ServerConfig(num_rounds=num_server_rounds)
     return ServerAppComponents(strategy=strategy, config=config)
 
 

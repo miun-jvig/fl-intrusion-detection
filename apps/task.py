@@ -9,7 +9,6 @@ from keras import layers
 from keras import regularizers
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow_privacy.privacy.keras_models.dp_keras_model import DPSequential
 
 # Make TensorFlow log less verbose
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -29,12 +28,9 @@ def _add_layers(model):
     model.add(layers.Dense(15, activation="softmax"))
 
 
-def load_model(*, use_dp, l2_norm_clip, noise_multiplier, num_microbatches=None, use_xla=True):
-    seq_cls = DPSequential if use_dp else Sequential
-    init_args = (l2_norm_clip, noise_multiplier, num_microbatches, use_xla) if use_dp else ()
-    model = seq_cls(*init_args)  # DPSequential(...) or Sequential()
+def load_model():
+    model = Sequential()
     _add_layers(model)
-
     model.compile(**_get_compilation())
     return model
 

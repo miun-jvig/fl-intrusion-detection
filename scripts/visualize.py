@@ -12,8 +12,8 @@ from visualization.utils import load_run_config
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-28' / '16-44-18'
-BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.895_round_2.h5'
+CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-29' / '17-05-23'
+BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.905_round_24.h5'
 TEST_PATH = PROJECT_ROOT / 'datasets' / 'global_test.csv'
 VISUALIZATION_PATH = PROJECT_ROOT / 'visualization'
 cfg = load_run_config(CURRENT_OUTPUT)

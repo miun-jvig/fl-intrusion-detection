@@ -66,12 +66,10 @@ def client_fn(context: Context):
     partition_id = context.node_config["partition-id"]
     run_config = context.run_config
     use_dp = run_config["use-dp"]
-    l2_norm_clip = run_config["l2-norm-clip"]
     noise_multiplier = run_config["noise-multiplier"]
     batch_size = context.run_config["batch-size"]
     local_epochs = context.run_config["local-epochs"]
     delta = context.run_config["delta"]
-    dp_kwargs = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
 
     # Read the node_config to know where dataset is located
     # dataset_path = context.node_config["dataset-path"]
@@ -79,7 +77,7 @@ def client_fn(context: Context):
     data = load_dataset(dataset_path)
 
     # Load model
-    model = load_model(**dp_kwargs)
+    model = load_model()
     if use_dp:
         logger.log(INFO, "⚙️ Using DP sequential model.")
     else:
