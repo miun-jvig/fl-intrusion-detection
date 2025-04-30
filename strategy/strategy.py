@@ -84,7 +84,7 @@ class CustomFedAvg(FedAvg):
             model.set_weights(ndarrays)
 
             # Save the PyTorch model
-            file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{server_round}.h5")
+            file_name = (self.save_path / f"model_state_acc_{accuracy:.3f}_round_{server_round}.weights.h5")
             model.save_weights(str(file_name))
 
     def store_results_and_log(self, server_round: int, tag: str, metric_type: str, results_dict):
@@ -149,6 +149,19 @@ class CustomFedAvg(FedAvg):
     def aggregate_evaluate(self, server_round, results, failures):
         """Aggregate results from federated evaluation."""
         loss, metrics = super().aggregate_evaluate(server_round, results, failures)
+
+        client_eval_dict = {}
+        for client_proxy, eval_res in results:
+            pid = eval_res.metrics.get("partition_id", client_proxy.cid)
+            client_eval_dict[f"client_{pid}/eval_loss"] = eval_res.loss
+            client_eval_dict[f"client_{pid}/eval_accuracy"] = eval_res.metrics["accuracy"]
+
+        self.store_results_and_log(
+            server_round=server_round,
+            tag="client_evaluate",
+            metric_type="evaluation",
+            results_dict=client_eval_dict,
+        )
 
         # Store and log
         self.store_results_and_log(

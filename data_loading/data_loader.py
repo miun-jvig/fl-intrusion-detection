@@ -14,7 +14,7 @@ def load_dataset(file_path):
 
 
 def load_data(file_path):
-    df = pd.read_csv(file_path, low_memory=False)
+    df = pd.read_csv(file_path)
     drop_cols = ["Attack_label", "Attack_type"]
     df_feats = df.drop(columns=[c for c in drop_cols if c in df.columns])
 

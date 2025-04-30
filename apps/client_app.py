@@ -57,7 +57,8 @@ class FlowerClient(NumPyClient):
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
         loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
-        return loss, len(self.x_test), {'accuracy': float(accuracy)}
+        results = {'accuracy': float(accuracy), "partition_id": self.partition_id}
+        return loss, len(self.x_test), results
 
 
 def client_fn(context: Context):
@@ -79,9 +80,9 @@ def client_fn(context: Context):
     # Load model
     model = load_model()
     if use_dp:
-        logger.log(INFO, "⚙️ Using DP sequential model.")
+        logger.log(INFO, f"⚙️ Using server-side DP with noise-multiplier: {noise_multiplier}.")
     else:
-        logger.log(INFO, f"⚙️ Using non-DP sequential model.")
+        logger.log(INFO, f"⚙️ Using regular (non-DP) sequential model.")
 
     return FlowerClient(model, partition_id, data, local_epochs, batch_size, noise_multiplier, delta).to_client()
 
