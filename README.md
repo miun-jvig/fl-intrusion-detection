@@ -1,7 +1,9 @@
 # Introduction
-The aim of this project is to explore federated learning and differential privacy for intrusion detection in a practical implementation on IoT-devices and see how it compares to centralized learning. The implementation uses Flower, TensorFlow, tensorflow_privacy, Raspberry Pi's, and wandb for tracking and visualization. The dataset used is the Edge-IIoTset Cyber Security Dataset of IoT & IIoT (https://www.kaggle.com/datasets/mohamedamineferrag/edgeiiotset-cyber-security-dataset-of-iot-iiot).
+The aim of this project was to explore federated learning and differential privacy for intrusion detection in a practical implementation on IoT-devices and see how it compares to centralized learning. The implementation used Flower, TensorFlow, tensorflow_privacy, Raspberry Pi's, and wandb for tracking and visualization. The dataset used is the Edge-IIoTset Cyber Security Dataset of IoT & IIoT (https://www.kaggle.com/datasets/mohamedamineferrag/edgeiiotset-cyber-security-dataset-of-iot-iiot).
 
 The implementation is able to perform federated learning and federated learning with differential privacy on the Edge-IIoTset. It also logs data locally on the server as well as on wandb. In addition, it also offers a way to help with hyperparameter tuning by introducing run_sweep.py, which uses wandb to display grid/random paralell coordinates plots. It also has built-in visualization.
+
+This implementation is done for my Master's thesis and more information can be found by searching for "Evaluating Privacy-Preserving Distributed AI for Resource-Constrained IoT Security" in https://miun.diva-portal.org/.
 
 # Requisites
 The code can be run using either embedded devices (I used five Raspberry Pi 3 with 16GB SD-card) or through simulation (see instructions).
