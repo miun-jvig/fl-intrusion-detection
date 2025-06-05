@@ -1,0 +1,9 @@
+method: grid
+metric:
+  name: centralized_evaluate_accuracy
+  goal: maximize
+parameters:
+  noise_multiplier:
+    values: [0.1, 0.293]
+  batch_size:
+    values: [128, 256, 512, 800]

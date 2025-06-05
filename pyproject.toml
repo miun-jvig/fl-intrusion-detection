@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fl"
+version = "1.0.0"
+description = "Federated AI with Embedded Devices using Flower"
+license = "Apache-2.0"
+dependencies = [
+    "tensorflow==2.15.0",
+    "flwr>=1.17.0",
+    "scikit-learn==1.6.1",
+    "wandb>=0.19.8"
+]
+
+[tool.hatch.build]
+exclude = [
+    "datasets/*", # Exclude datasets from FAB (if generated in this directory)
+    "_static/*", # Exclude images in README from FAB
+    "results/*",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.flwr.app]
+publisher = "miun-jvig"
+
+[tool.flwr.app.components]
+serverapp = "apps.server_app:app"
+clientapp = "apps.client_app:app"
+
+[tool.flwr.app.config]
+num-server-rounds = 25
+fraction-evaluate = 1.0
+local-epochs = 5
+batch-size = 800
+fraction-fit = 1.0
+l2-norm-clip = 1.0
+noise-multiplier = 0.293
+delta = 1e-7
+use-dp = true
+use-wandb = true
+
+[tool.flwr.federations]
+default = "fl-iot"
+
+[tool.flwr.federations.fl-iot-local]
+options.num-supernodes = 5
+
+[tool.flwr.federations.fl-iot]
+address = "127.0.0.1:9093"
+insecure = true
