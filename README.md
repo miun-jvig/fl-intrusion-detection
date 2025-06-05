@@ -69,11 +69,11 @@ This will start a W&B sweep with your specified trials. Results and metrics will
 Visualization is done automatically if use-wandb is set to true in `pyproject.toml` or by running `python -m scripts.visualize`. Note that you have to change some variables in `scripts/visualize.py` to match the output folder and the model you wish to visualize.
 
 # Results
-### Federated
+### FL
 - **Evaluation Accuracy:** 100 % on 2-class, 95 % on 6-class, and 94 % on 15-class classification.
 - **Setup:** 25 rounds, 3 local epochs, batch size = 800
 
-### Differentially Private Federated
+### FL + DP
 - **Evaluation Accuracy:** 95 % on 2-class, 85 % on 6-class, and 82 % on 15-class classification.
 - **Privacy Budget:** ε ≈ 10, δ = 1 × 10⁻⁷  
 - **DP Parameters:** L₂-norm clip = 1.0, noise multiplier = 0.293
