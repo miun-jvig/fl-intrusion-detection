@@ -1,24 +1,21 @@
-from keras.models import Sequential
-from keras.layers import (Dense, Dropout, Input, BatchNormalization)
-from keras.regularizers import l2
+from keras import Sequential, Input
+from keras import layers
+from keras import regularizers
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
-def create_model(input_dim, num_classes):
+def load_model():
     lambda_val = 1e-4
     lr_schedule = ExponentialDecay(initial_learning_rate=0.001, decay_steps=5000, decay_rate=0.9)
     optimizer = Adam(learning_rate=lr_schedule)
 
     model = Sequential([
-        Input(shape=(input_dim,)),
-        Dense(128, activation='relu', kernel_regularizer=l2(lambda_val)),
-        BatchNormalization(),
-        Dense(64, activation='relu', kernel_regularizer=l2(lambda_val)),
-        BatchNormalization(),
-        Dense(32, activation='relu', kernel_regularizer=l2(lambda_val)),
-        Dropout(0.3),
-        Dense(num_classes, activation='softmax')
+        Input(shape=(95,)),
+        layers.Dense(90, activation='relu', kernel_regularizer=regularizers.l2(lambda_val)),
+        layers.Dense(90, activation='relu', kernel_regularizer=regularizers.l2(lambda_val)),
+        layers.Dropout(0.3),
+        layers.Dense(15, activation="softmax")
     ])
 
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])

@@ -1,18 +1,10 @@
 import pandas as pd
 from sklearn.utils import shuffle
-from sklearn.preprocessing import LabelEncoder
-from keras.utils import to_categorical
+from sklearn.preprocessing import StandardScaler
 
 
-def load_data(filename):
-    df = pd.read_csv(filename, low_memory=False)
-    df.head(5)
-    labels = 'Attack_type'
-    print(df[labels].value_counts())
 
-    x = df.drop(columns=[labels]).to_numpy().astype('float32')  # Features: all columns except 'Attack_type'
-    y = to_categorical(LabelEncoder().fit_transform(df[labels]))  # Label: 'Attack_type', one hot encoded
-    return x, y
+
 
 
 def preprocess_data(filename):
@@ -28,6 +20,13 @@ def preprocess_data(filename):
     df.isna().sum()
     print(df['Attack_type'].value_counts())
 
+    # normalize numerical data
+    drop_cols = ["Attack_label", "Attack_type"]
+    df_feats = df.drop(columns=[c for c in drop_cols if c in df.columns])
+    scaler = StandardScaler().fit(df_feats.select_dtypes("number"))
+    df_feats[df_feats.select_dtypes("number").columns] = scaler.transform(df_feats.select_dtypes("number"))
+    df = pd.concat([df_feats, df[drop_cols]], axis=1)
+
     # encode
     columns_to_encode = [
         'http.request.method', 'http.referer', 'http.request.version',
@@ -37,7 +36,7 @@ def preprocess_data(filename):
         df = encode_text_dummy(df, column)
 
     # save as new .csv-file
-    df.to_csv('preprocessed_DNN.csv', encoding='utf-8')
+    df.to_csv('preprocessed_DNN.csv', index=False, encoding='utf-8')
 
 
 def encode_text_dummy(df, name):

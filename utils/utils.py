@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
 
 
 def one_hot_encode(y_test, predicted_classes):
@@ -13,7 +14,12 @@ def save_history(history, filename):
         json.dump(history.history, f)
 
 
-def print_data_sizes(x_train, y_train, x_val, y_val, x_test, y_test):
-    print(f"Training data: {x_train.shape}, {y_train.shape}")
-    print(f"Validation data: {x_val.shape}, {y_val.shape}")
-    print(f"Testing data: {x_test.shape}, {y_test.shape}")
+def make_class_weight(y_onehot):
+    y_inds = np.argmax(y_onehot, axis=1)
+    classes = np.unique(y_inds)
+    weights = compute_class_weight(
+        class_weight="balanced",
+        classes=classes,
+        y=y_inds,
+    )
+    return dict(zip(classes.tolist(), weights.tolist()))
