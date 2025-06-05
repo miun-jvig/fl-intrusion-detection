@@ -40,7 +40,7 @@ def preprocess_data(filename, test_size=0.05):
     remaining_df, global_test_df = train_test_split(
         df_data, test_size=test_size, random_state=42, stratify=df_data['Attack_type']
     )
-    # global_test_df.to_csv(PROJECT_ROOT / 'datasets' / 'global_test.csv', index=False, encoding='utf-8')
+    global_test_df.to_csv(PROJECT_ROOT / 'datasets' / 'global_test.csv', index=False, encoding='utf-8')
     print(f"Saved global test set with {len(global_test_df)} samples.")
 
     return remaining_df
