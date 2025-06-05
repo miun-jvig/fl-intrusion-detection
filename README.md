@@ -1,5 +1,3 @@
-Note: this project is actively being developed.
-
 # Introduction
 The aim of this project is to explore federated learning and differential privacy for intrusion detection in a practical implementation on IoT-devices and see how it compares to centralized learning. The implementation uses Flower, TensorFlow, tensorflow_privacy, Raspberry Pi's, and wandb for tracking and visualization. The dataset used is the Edge-IIoTset Cyber Security Dataset of IoT & IIoT (https://www.kaggle.com/datasets/mohamedamineferrag/edgeiiotset-cyber-security-dataset-of-iot-iiot).
 
@@ -72,11 +70,11 @@ Visualization is done automatically if use-wandb is set to true in `pyproject.to
 
 # Results
 ### Federated
-- **Evaluation Accuracy:** ~ 96 % (federated & centralized)  
-- **Setup:** 25 rounds, 3 local epochs, batch size = 64
+- **Evaluation Accuracy:** 100 % on 2-class, 95 % on 6-class, and 94 % on 15-class classification.
+- **Setup:** 25 rounds, 3 local epochs, batch size = 800
 
 ### Differentially Private Federated
-- **Evaluation Accuracy:** ~ 94 % (federated & centralized)  
-- **Privacy Budget:** ε ≈ 7.82, δ = 1 × 10⁻⁷  
-- **DP Parameters:** L₂-norm clip = 4.0, noise multiplier = 0.5  
-- **Setup:** 25 rounds, 3 local epochs, batch size = 64
+- **Evaluation Accuracy:** 95 % on 2-class, 85 % on 6-class, and 82 % on 15-class classification.
+- **Privacy Budget:** ε ≈ 10, δ = 1 × 10⁻⁷  
+- **DP Parameters:** L₂-norm clip = 1.0, noise multiplier = 0.293
+- **Setup:** 25 rounds, 5 local epochs, batch size = 800
