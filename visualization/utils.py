@@ -10,16 +10,12 @@ def load_run_config(run_dir: Path):
     return json.load((run_dir / "run_config.json").open())
 
 
-def load_predictions_and_classes(model_path, test_data_path, run_cfg):
+def load_predictions_and_classes(model_path, test_data_path):
     # Load data
     df_test, x_test, y_test = load_data(test_data_path)
 
     # Variables
-    use_dp = run_cfg["use-dp"]
-    l2_norm_clip = run_cfg["l2-norm-clip"]
-    noise_multiplier = run_cfg["noise-multiplier"]
-    dp_args = dict(use_dp=use_dp, l2_norm_clip=l2_norm_clip, noise_multiplier=noise_multiplier)
-    model = load_model(**dp_args)
+    model = load_model()
 
     model.load_weights(model_path)
     predictions = model.predict(x_test)

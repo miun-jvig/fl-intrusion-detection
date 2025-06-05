@@ -34,7 +34,7 @@ clientapp = "apps.client_app:app"
 [tool.flwr.app.config]
 num-server-rounds = 25
 fraction-evaluate = 1.0
-local-epochs = 2
+local-epochs = 5
 batch-size = 800
 fraction-fit = 1.0
 l2-norm-clip = 1.0

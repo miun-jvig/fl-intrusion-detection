@@ -1,45 +1,18 @@
 import dp_accounting
+import pandas as pd
+from pathlib import Path
 
-
-def get_epsilon(num):
-    # privacy parameters
-    target_delta = 1e-7
-
-    # FL parameters
-    total_clients = 137167
-    clients_per_round = 5
-    server_rounds = 25
-
-    # sampling ratio
-    q = clients_per_round / total_clients
-
-    def compute_epsilon(noise_mult: float) -> float:
-        # 1) make a fresh accountant
-        acct = dp_accounting.rdp.RdpAccountant()
-
-        # 2) build the per-round event: sample then add Gaussian noise
-        gauss = dp_accounting.GaussianDpEvent(noise_mult)
-        samp = dp_accounting.PoissonSampledDpEvent(q, gauss)
-        # 3) compose it over all rounds
-        composed = dp_accounting.SelfComposedDpEvent(samp, server_rounds)
-
-        # 4) feed it to the accountant
-        acct.compose(composed)
-
-        # 5) ask “what ε for this δ?”
-        return acct.get_epsilon(target_delta)
-
-    eps = compute_epsilon(num)
-    print(f"noise_mult = {num} ⇒ ε ≈ {eps:.1f} for (δ={target_delta})")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def get_noise_target():
+    df = pd.read_csv(PROJECT_ROOT / 'datasets' / 'DNN-EdgeIIoT-dataset.csv', low_memory=False)
     # privacy target
-    target_eps = 150
+    target_eps = 10
     target_delta = 1e-7
 
     # fl parameters
-    total_clients = 137167
+    total_clients = df['ip.src_host'].nunique()
     clients_per_round = 5
     server_rounds = 25
 
@@ -68,5 +41,5 @@ def get_noise_target():
     print(f"Use noise_multiplier ≈ {best_noise:.3f} to get (ε={target_eps}, δ={target_delta})-DP")
 
 
-# get_noise_target()
-get_epsilon(0.293)
+if __name__ == '__main__':
+    get_noise_target()

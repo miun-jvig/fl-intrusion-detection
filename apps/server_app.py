@@ -65,7 +65,6 @@ def server_fn(context: fl.common.Context):
 
     # Test data_loading
     test_path = Path.home() / 'fl-intrusion-detection-dp' / 'datasets' / 'global_test.csv'
-    # test_path = PROJECT_ROOT / 'datasets' / 'global_test.csv'
     _, x_test, y_test = load_data(test_path)
 
     # Define the strategy

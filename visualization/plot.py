@@ -98,59 +98,156 @@ def plot_aggregated_fit_results(data_file, save_filename):
     plt.close()
 
 
-def plot_fit_results_clients(data_file, save_filename):
-    # Load JSON data
-    with open(data_file, 'r') as f:
+def plot_eval_data_client(data_file, save_filename, fontsize=12):
+    # 1) Load JSON
+    with open(data_file, 'r') as file:
+        data = json.load(file)
+
+    # 2) Build dicts for centralized eval by round
+    central_acc = {
+        e["round"]: e["centralized_evaluate_accuracy"]
+        for e in data.get("centralized_evaluate", [])
+    }
+    central_loss = {
+        e["round"]: e["centralized_evaluate_loss"]
+        for e in data.get("centralized_evaluate", [])
+    }
+
+    # 3) Load per‐client entries
+    entries = data.get("client_evaluate", [])
+    if not entries:
+        raise ValueError("No 'client_evaluate' data found")
+
+    # 4) Discover all client IDs from the first entry
+    sample = entries[0]
+    client_ids = sorted({
+        key.split("/")[0]
+        for key in sample.keys()
+        if key not in ("round",)
+    })
+
+    # 5) Prepare plot
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+    # Rounds common to client data
+    rounds = [e["round"] for e in entries]
+
+    # 6) Plot centralized as solid black line
+    ax1.plot(rounds, [central_acc[r] for r in rounds], color="black", linestyle="-", linewidth=2,
+             label="Aggregated Eval")
+    ax2.plot(rounds, [central_loss[r] for r in rounds], color="black", linestyle="-", linewidth=2,
+             label="Aggregated Loss")
+
+    # 7) Plot per‐client eval as dashed colored lines
+    cmap = plt.get_cmap("tab10")
+    for i, cid in enumerate(client_ids):
+        # Gather only rounds where both metrics exist
+        rd, accs, losses = [], [], []
+        for e in entries:
+            a_key, l_key = f"{cid}/eval_accuracy", f"{cid}/eval_loss"
+            if a_key in e and l_key in e:
+                rd.append(e["round"])
+                accs.append(e[a_key])
+                losses.append(e[l_key])
+
+        color = cmap(i % cmap.N)
+        ax1.plot(rd, accs, linestyle="--", color=color, alpha=0.8, label=cid)
+        ax2.plot(rd, losses, linestyle="--", color=color, alpha=0.8, label=cid)
+
+    ax1.grid(True, alpha=0.5)
+    ax2.grid(True, alpha=0.5)
+    # 8) Labels & legend
+    ax1.set_title("Per-Client Evaluation Accuracy by Round", fontsize=fontsize)
+    ax1.set_xlabel("FL Round", fontsize=fontsize)
+    ax1.set_ylabel("Accuracy", fontsize=fontsize)
+    ax1.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")
+
+    ax2.set_title("Per-Client Evaluation Loss by Round", fontsize=fontsize)
+    ax2.set_xlabel("Round", fontsize=fontsize)
+    ax2.set_ylabel("Loss", fontsize=fontsize)
+    ax2.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")
+
+    fig.tight_layout()
+    plt.savefig(save_filename)
+    plt.close()
+
+
+def plot_fit_results_clients(data_file, save_filename, fontsize=12):
+    with open(data_file) as f:
         data = json.load(f)
 
-    # Use only the 'client_fit' entries, ignore aggregated 'all_clients_fit'
     entries = data.get('client_fit', [])
     if not entries:
-        raise ValueError("No 'client_fit' data found in the file.")
+        raise ValueError("No 'client_fit' data found")
 
-    # Identify client IDs from keys in the first entry
-    sample = entries[0]
-    client_ids = sorted({key.split('/')[0] for key in sample.keys() if key != 'round'})
-
-    # Assign one distinct color per client
+    # Discover clients & assign colors
+    client_ids = sorted({k.split('/')[0] for k in entries[0] if k != 'round'})
     cmap = plt.get_cmap('tab10')
     colors = {cid: cmap(i % cmap.N) for i, cid in enumerate(client_ids)}
-
-    # Prepare the figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
-
-    # Extract rounds once
     rounds = [e['round'] for e in entries]
 
-    # Plot per-client accuracy and loss
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+    # Plot each client (no labels here)
     for cid in client_ids:
-        train_acc = [e[f'{cid}/train_acc'] for e in entries]
-        val_acc = [e[f'{cid}/val_acc'] for e in entries]
-        train_loss = [e[f'{cid}/train_loss'] for e in entries]
-        val_loss = [e[f'{cid}/val_loss'] for e in entries]
+        c = colors[cid]
+        ax1.plot(rounds, [e[f'{cid}/train_acc'] for e in entries],
+                 linestyle='-', color=c, alpha=0.8)
+        ax1.plot(rounds, [e[f'{cid}/val_acc'] for e in entries],
+                 linestyle='--', color=c, alpha=0.8)
+        ax2.plot(rounds, [e[f'{cid}/train_loss'] for e in entries],
+                 linestyle='-', color=c, alpha=0.8)
+        ax2.plot(rounds, [e[f'{cid}/val_loss'] for e in entries],
+                 linestyle='--', color=c, alpha=0.8)
 
-        color = colors[cid]
-        ax1.plot(rounds, train_acc, marker='o', linestyle='-', color=color, alpha=0.8)
-        ax1.plot(rounds, val_acc, marker='o', linestyle='--', color=color, alpha=0.8)
+    ax1.grid(True, alpha=0.5)
+    ax2.grid(True, alpha=0.5)
+    # Build the style‐legend (train vs. val)
+    style_handles = [
+        Line2D([0], [0], color='black', linestyle='-', lw=2, label='Training'),
+        Line2D([0], [0], color='black', linestyle='--', lw=2, label='Validation'),
+    ]
+    # Anchor it at the right, up near the top
+    style_legend = ax1.legend(handles=style_handles,
+                              title='Split',
+                              loc='upper left',
+                              bbox_to_anchor=(1.02, 0.85),
+                              fontsize="small")
+    ax1.add_artist(style_legend)
 
-        ax2.plot(rounds, train_loss, marker='o', linestyle='-', color=color, alpha=0.8)
-        ax2.plot(rounds, val_loss, marker='o', linestyle='--', color=color, alpha=0.8)
+    # Build the client‐color legend
+    client_handles = [
+        Line2D([0], [0], color=colors[cid], lw=2, label=cid)
+        for cid in client_ids
+    ]
+    ax1.legend(handles=client_handles,
+               title='Client',
+               loc='upper left',
+               bbox_to_anchor=(1.02, 0.50),
+               fontsize="small")
 
-    # Set titles and labels
-    ax1.set_title('Per-Client Accuracy by Round')
-    ax1.set_xlabel('Round')
-    ax1.set_ylabel('Accuracy')
+    # Repeat legends on loss subplot
+    # style
+    style_legend2 = ax2.legend(handles=style_handles,
+                               title='Split',
+                               loc='upper left',
+                               bbox_to_anchor=(1.02, 0.85),
+                               fontsize="small")
+    ax2.add_artist(style_legend2)
+    # clients
+    ax2.legend(handles=client_handles,
+               title='Client',
+               loc='upper left',
+               bbox_to_anchor=(1.02, 0.50),
+               fontsize="small")
 
-    ax2.set_title('Per-Client Loss by Round')
-    ax2.set_xlabel('Round')
-    ax2.set_ylabel('Loss')
+    ax1.set_title("Per-Client Training/Validation Accuracy by Round", fontsize=fontsize)
+    ax1.set_xlabel("FL Round", fontsize=fontsize)
+    ax1.set_ylabel("Accuracy", fontsize=fontsize)
+    ax2.set_title("Per-Client Training/Validation Loss by Round", fontsize=fontsize)
+    ax2.set_xlabel("FL Round", fontsize=fontsize)
+    ax2.set_ylabel("Loss", fontsize=fontsize)
 
-    # Build and attach shared legend
-    handles = [Line2D([0], [0], color=colors[cid], lw=2, label=cid) for cid in client_ids]
-    ax1.legend(handles=handles, title='Clients', loc='best')
-    ax2.legend(handles=handles, title='Clients', loc='best')
-
-    # Adjust layout, save and close
     fig.tight_layout()
-    plt.savefig(save_filename, dpi=300)
+    fig.savefig(save_filename)
     plt.close(fig)

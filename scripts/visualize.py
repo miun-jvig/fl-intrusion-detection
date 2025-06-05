@@ -2,7 +2,7 @@ from visualization.plot import (
     plot_confusion_matrix,
     plot_binary_confusion,
     plot_eval_data,
-    plot_aggregated_fit_results,
+    plot_eval_data_client,
     plot_fit_results_clients)
 from visualization.utils import load_predictions_and_classes, group_classes
 import numpy as np
@@ -12,13 +12,11 @@ from visualization.utils import load_run_config
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-04-29' / '17-05-23'
-BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.905_round_24.h5'
+CURRENT_OUTPUT = PROJECT_ROOT / 'outputs' / '2025-05-08' / '00-18-18'
+BEST_MODEL = CURRENT_OUTPUT / 'model_state_acc_0.937_round_13.weights.h5'
 TEST_PATH = PROJECT_ROOT / 'datasets' / 'global_test.csv'
 VISUALIZATION_PATH = PROJECT_ROOT / 'visualization'
 cfg = load_run_config(CURRENT_OUTPUT)
-
-class_names, predicted, true = load_predictions_and_classes(BEST_MODEL, TEST_PATH, cfg)
 
 
 def binary_visualize():
@@ -64,13 +62,15 @@ def multiclass_visualize():
 
 
 def plot_metrics():
-    plot_eval_data(CURRENT_OUTPUT / 'evaluation_results.json', VISUALIZATION_PATH / 'evaluation_plot.png')
+    # plot_eval_data(CURRENT_OUTPUT / 'evaluation_results.json', VISUALIZATION_PATH / 'evaluation_plot.png')
     # plot_aggregated_fit_results(CURRENT_OUTPUT / 'fit_results.json', VISUALIZATION_PATH / 'fit_plot.png')
+    plot_eval_data_client(CURRENT_OUTPUT / 'evaluation_results.json', VISUALIZATION_PATH / 'eval_plot.png')
     plot_fit_results_clients(CURRENT_OUTPUT / 'fit_results.json', VISUALIZATION_PATH / 'fit_plot.png')
 
 
 # --- Choose what to run ---
 if __name__ == "__main__":
+    class_names, predicted, true = load_predictions_and_classes(BEST_MODEL, TEST_PATH)
     binary_visualize()
     multiclass_visualize()
     six_class_visualize()
